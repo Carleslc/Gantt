@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Predefined Project Structure</title>
+</head>
+<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" title="no title" charset="utf-8">
+
+<script type="text/javascript" src="../common/testdata.js"></script>
+<style type="text/css">
+	html, body {
+		height: 100%;
+		padding: 0px;
+		margin: 0px;
+		overflow: hidden;
+	}
+
+		/* hide progress drag in projects and objectives */
+	.project-task .gantt_task_progress_drag,
+	.phase-task .gantt_task_progress_drag {
+		display: none !important;
+	}
+
+		/* hide 'plus' buttons for tasks */
+	.regular-task .gantt_add {
+		display: none;
+	}
+</style>
+<body>
+<div id="gantt_here" style='width:100%; height:100%;'></div>
+
+
+<script type="text/javascript">
+	gantt.message({
+		text:"Predefined project structure with three levels of items<br>1 - <b>Projects</b><br>2 - <b>Subprojects</b><br>3 - <b>Tasks</b><br>Tasks can't have child items",
+		expire:-1
+	});
+
+	gantt.config.open_tree_initially = true;
+	gantt.config.scale_unit = "month";
+	gantt.config.date_scale = "%F, %Y";
+	gantt.config.scale_height = 50;
+	gantt.config.subscales = [
+		{unit: "day", step: 1, date: "%j, %D" }
+	];
+
+	gantt.config.types.root = "project-task";
+	gantt.config.types.subproject = "subproject";
+	gantt.config.lightbox.subproject_sections = gantt.config.lightbox.sections;
+	gantt.config.lightbox.project_sections = [
+		{name: "description", height: 70, map_to: "text", type: "textarea", focus: true},
+		{name: "time", type: "duration", map_to: "auto", readonly: true}
+	];
+
+	// set initial values based on task type
+	function defaultValues(task) {
+		var text = "",
+				index = gantt.getChildren(task.parent || gantt.config.root_id).length + 1,
+				types = gantt.config.types;
+
+		switch (task.type) {
+			case types.project:
+				text = "Project";
+				break;
+			case types.subproject:
+				text = 'Subproject';
+				break;
+			default:
+				text = 'Task';
+				break;
+		}
+		task.text = text + " #" + index;
+		return;
+	}
+
+	gantt.attachEvent("onTaskCreated", function (task) {
+		var parent = task.parent,
+				types = gantt.config.types,
+				level = 0;
+
+		if (parent == gantt.config.root_id || !parent) {
+			level = 0;
+		} else {
+			level = gantt.getTask(task.parent).$level + 1;
+		}
+//assign task type based on task level
+		switch (level) {
+			case 0:
+				task.type = types.project;
+				break;
+			case 1:
+				task.type = types.subproject;
+				break;
+			default:
+				task.type = types.task;
+				break;
+		}
+
+		defaultValues(task);
+		return true;
+	});
+
+
+	//css template for each task type
+	gantt.templates.task_class = gantt.templates.grid_row_class = function (start, end, task) {
+		switch (task.type) {
+			case gantt.config.types.project:
+				return 'project-task';
+				break;
+			case gantt.config.types.subproject:
+				return 'phase-task';
+				break;
+			default:
+				return 'regular-task';
+				break;
+		}
+	};
+
+
+	gantt.init("gantt_here");
+
+	gantt.parse({"data": [
+		{"id": 1426170055699, "start_date": "02-01-2014 00:00", "text": "Project #1", "duration": 11, "type": "project", "parent": 0},
+		{"id": 1426170055704, "start_date": "03-01-2014 00:00", "text": "Subproject #1", "duration": 9, "parent": "1426170055699", "type": "subproject"},
+		{"id": 1426170055707, "start_date": "04-01-2014 00:00", "text": "Task #1", "duration": 1, "parent": "1426170055704", "type": "task"},
+		{"id": 1426170055710, "start_date": "06-01-2014 00:00", "text": "Task #2", "duration": 4, "parent": "1426170055704", "type": "task"},
+		{"id": 1426170055711, "start_date": "10-01-2014 00:00", "text": "Task #3", "duration": 3, "parent": "1426170055704", "type": "task"},
+		{"id": 1426170055712, "start_date": "02-01-2014 00:00", "text": "Subproject #2", "duration": 5, "parent": "1426170055699", "type": "subproject"},
+		{"id": 1426170055715, "start_date": "03-01-2014 00:00", "text": "Task #1", "duration": 4, "parent": "1426170055712", "type": "task", "progress": 0},
+		{"id": 1426170055718, "start_date": "07-01-2014 00:00", "text": "Task #2", "duration": 5, "parent": "1426170055712", "type": "task"},
+		{"id": 1426170055702, "start_date": "02-01-2014 00:00", "text": "Project #2", "duration": 15, "type": "project", "end_date": "17-01-2014 00:00", "parent": 0},
+		{"id": 1426170055719, "start_date": "02-01-2014 00:00", "text": "Subproject #1", "duration": 7, "parent": "1426170055702", "type": "subproject"},
+		{"id": 1426170055722, "start_date": "02-01-2014 00:00", "text": "Task #1", "duration": 4, "parent": "1426170055719", "type": "task"},
+		{"id": 1426170055725, "start_date": "06-01-2014 00:00", "text": "Task #2", "duration": 6, "parent": "1426170055719", "type": "task"},
+		{"id": 1426170055726, "start_date": "12-01-2014 00:00", "text": "Task #3", "duration": 5, "parent": "1426170055719", "type": "task"},
+		{"id": 1426170055703, "start_date": "08-01-2014 00:00", "text": "Project #3", "duration": 8, "type": "project", "parent": 0},
+		{"id": 1426170055727, "start_date": "08-01-2014 00:00", "text": "Subproject #1", "duration": 8, "parent": "1426170055703", "type": "subproject"}
+	], "links": []});
+
+
+</script>
+</body>

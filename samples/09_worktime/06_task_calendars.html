@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Task level calendars</title>
+</head>
+<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+<style type="text/css">	html, body { height: 100%; padding:0px; margin:0px; overflow: hidden; } </style>
+<div id="gantt_weekend_styles"> <style type="text/css">
+	.gantt_task_cell.week_end{
+		background-color: #e8e8e8;
+	}
+	.gantt_task_row.gantt_selected .gantt_task_cell.week_end{
+		background-color: #e0e0dd;
+	}
+</style></div>
+<body>
+<div id="gantt_here" style='width:100%; height:90%;'></div>
+<script type="text/javascript">
+
+	gantt.message("Change working calendar of any task. Double click any task to check the details");
+
+	gantt.config.work_time = true;
+
+	gantt.config.scale_unit = "day";
+	gantt.config.date_scale = "%D, %d";
+	gantt.config.min_column_width = 60;
+	gantt.config.duration_unit = "day";
+	gantt.config.scale_height = 20*3;
+	gantt.config.row_height = 28;
+
+	var weekScaleTemplate = function(date){
+		var dateToStr = gantt.date.date_to_str("%d %M");
+		var weekNum = gantt.date.date_to_str("(week %W)");
+		var endDate = gantt.date.add(gantt.date.add(date, 1, "week"), -1, "day");
+		return dateToStr(date) + " - " + dateToStr(endDate) + " " + weekNum(date);
+	};
+
+	gantt.config.subscales = [
+		{unit:"month", step:1, date:"%F, %Y"},
+		{unit:"week", step:1, template:weekScaleTemplate}
+	];
+
+	gantt.addCalendar({
+		id:"custom",
+		worktime: {
+			hours: [8, 17],
+			days: [ 1, 1, 1, 1, 1, 1 ,1]
+		}
+	});
+
+	gantt.templates.task_cell_class = function(task, date) {
+		if(!gantt.isWorkTime({date:date, task: task}))
+			return "week_end";
+		return "";
+	};
+
+	gantt.templates.task_text = function(syart, end, task) {
+		var calendar = gantt.getTaskCalendar(task);
+		return task.text + ", <b>" + (calendar.id == "custom" ? "Full week" : "Default") +"</b> calendar";
+	};
+	gantt.locale.labels.section_calendar = "Calendar";
+	gantt.config.lightbox.sections = [
+		{name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
+		{name: "calendar", height: 22, map_to: "calendar_id", type: "select", options: [
+			{key:"", label: "Default"},
+			{key:"custom", label: "Full week"}
+		]},
+		{name: "time", type: "duration", map_to: "auto"}
+	];
+
+	function updateTaskTiming(task) {
+		task.start_date = gantt.getClosestWorkTime({
+			dir: "future",
+			date: task.start_date,
+			unit: gantt.config.duration_unit,
+			task: task
+		});
+		task.end_date = gantt.calculateEndDate(task);
+	}
+
+	gantt.attachEvent("onLightboxSave", function(id, task, is_new){
+		updateTaskTiming(task);
+		return true;
+	});
+
+
+	gantt.init("gantt_here");
+	gantt.parse({
+		"data":[
+			{"id":11, "calendar_id":"custom", "text":"Project #1", "start_date":"28-03-2013", "duration":"11", "progress": 0.6, "open": true},
+			{"id":1, "calendar_id":"", "text":"Project #2", "start_date":"01-04-2013", "duration":"18", "progress": 0.4, "open": true},
+
+			{"id":2, "calendar_id":"custom", "text":"Task #1", "start_date":"02-04-2013", "duration":"8", "parent":"1", "progress":0.5, "open": true},
+			{"id":3, "calendar_id":"custom", "text":"Task #2", "start_date":"11-04-2013", "duration":"8", "parent":"1", "progress": 0.6, "open": true},
+			{"id":4, "calendar_id":"","text":"Task #3", "start_date":"13-04-2013", "duration":"6", "parent":"1", "progress": 0.5, "open": true},
+			{"id":5, "calendar_id":"","text":"Task #1.1", "start_date":"02-04-2013", "duration":"7", "parent":"2", "progress": 0.6, "open": true},
+			{"id":6, "calendar_id":"custom", "text":"Task #1.2", "start_date":"03-04-2013", "duration":"7", "parent":"2", "progress": 0.6, "open": true},
+			{"id":7, "calendar_id":"","text":"Task #2.1", "start_date":"11-04-2013", "duration":"8", "parent":"3", "progress": 0.6, "open": true},
+			{"id":8, "calendar_id":"custom", "text":"Task #3.1", "start_date":"14-04-2013", "duration":"5", "parent":"4", "progress": 0.5, "open": true},
+			{"id":9, "calendar_id":"","text":"Task #3.2", "start_date":"14-04-2013", "duration":"4", "parent":"4", "progress": 0.5, "open": true},
+			{"id":10, "calendar_id":"","text":"Task #3.3", "start_date":"14-04-2013", "duration":"3", "parent":"4", "progress": 0.5, "open": true},
+
+			{"id":12, "calendar_id":"","text":"Task #1", "start_date":"03-04-2013", "duration":"5", "parent":"11", "progress": 1, "open": true},
+			{"id":13, "calendar_id":"custom", "text":"Task #2", "start_date":"02-04-2013", "duration":"7", "parent":"11", "progress": 0.5, "open": true},
+			{"id":14, "calendar_id":"custom", "text":"Task #3", "start_date":"02-04-2013", "duration":"6", "parent":"11", "progress": 0.8, "open": true},
+			{"id":15, "calendar_id":"","text":"Task #4", "start_date":"02-04-2013", "duration":"5", "parent":"11", "progress": 0.2, "open": true},
+			{"id":16, "calendar_id":"","text":"Task #5", "start_date":"02-04-2013", "duration":"7", "parent":"11", "progress": 0, "open": true},
+
+			{"id":17, "calendar_id":"","text":"Task #2.1", "start_date":"03-04-2013", "duration":"2", "parent":"13", "progress": 1, "open": true},
+			{"id":18, "calendar_id":"custom", "text":"Task #2.2", "start_date":"06-04-2013", "duration":"3", "parent":"13", "progress": 0.8, "open": true},
+			{"id":19, "calendar_id":"","text":"Task #2.3", "start_date":"10-04-2013", "duration":"4", "parent":"13", "progress": 0.2, "open": true},
+			{"id":20, "calendar_id":"custom", "text":"Task #2.4", "start_date":"10-04-2013", "duration":"4", "parent":"13", "progress": 0, "open": true},
+			{"id":21, "calendar_id":"","text":"Task #4.1", "start_date":"03-04-2013", "duration":"4", "parent":"15", "progress": 0.5, "open": true},
+			{"id":22, "calendar_id":"","text":"Task #4.2", "start_date":"03-04-2013", "duration":"4", "parent":"15", "progress": 0.1, "open": true},
+			{"id":23, "calendar_id":"","text":"Task #4.3", "start_date":"03-04-2013", "duration":"5", "parent":"15", "progress": 0, "open": true}
+		],
+		"links":[]
+	});
+
+</script>
+</body>

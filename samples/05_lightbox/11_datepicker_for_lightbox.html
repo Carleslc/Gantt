@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+	<title>Datepicker in lightbox</title>
+	<script src='../common/dhtmlxSuite/dhtmlx.js'></script>
+	<script src='../../codebase/dhtmlxgantt.js' type='text/javascript' charset='utf-8'></script>
+
+	<link rel='stylesheet' type='text/css' href='../common/dhtmlxSuite/skins/terrace/dhtmlx.css'/>
+	<link rel='stylesheet' href='../../codebase/dhtmlxgantt.css' type='text/css' media='screen' title='no title' charset='utf-8'>
+</head>
+<body>
+<style type='text/css'>
+	html, body{ padding:0px; margin:0px; height:100%;}
+	.dhx_calendar_cont input {
+		width: 96px;
+		padding: 0;
+		margin: 3px 10px 10px 10px;
+		font-size: 11px;
+		height: 17px;
+		text-align: center;
+		border: 1px solid #ccc;
+		color: #646464;
+	}
+
+	.dhtmlxcalendar_dhx_skyblue, .dhtmlxcalendar_dhx_web, .dhtmlxcalendar_dhx_terrace {
+		z-index: 999999 !important;
+	}
+</style>
+<div id='gantt_here' style="width:100%; height:100%;"></div>
+<script type='text/javascript'>
+
+	var duration = function (a, b, c) {
+		var res = gantt.calculateDuration(a.getDate(false), b.getDate(false));
+		c.innerHTML = res + ' days';
+	};
+
+	var calendar_init = function (id, data, date) {
+		var obj = new dhtmlXCalendarObject(id);
+		obj.setDateFormat(data.date_format ? data.date_format : '');
+		obj.setDate(date ? date : (new Date()));
+		obj.hideTime();
+		if (data.skin)
+			obj.setSkin(data.skin);
+		return obj;
+	};
+
+	gantt.form_blocks["dhx_calendar"] = {
+		render: function (sns) {
+			return "<div class='dhx_calendar_cont'><input type='text' readonly='true' id='calendar1'/> &#8211; "
+					+ "<input type='text' readonly='true' id='calendar2'/><label id='duration'></label></div>";
+		},
+		set_value: function (node, value, task, data) {
+			var a = node._cal_start = calendar_init('calendar1', data, task.start_date);
+			var b = node._cal_end = calendar_init('calendar2', data, task.end_date);
+			var c = node.lastChild;
+
+			b.setInsensitiveRange(null, new Date(a.getDate(false) - 86400000));
+
+			var a_click = a.attachEvent("onClick", function (date) {
+				b.setInsensitiveRange(null, new Date(date.getTime() - 86400000));
+				duration(a, b, c);
+			});
+
+			var b_click = b.attachEvent("onClick", function (date) {
+				duration(a, b, c);
+			});
+
+			var a_time_click = a.attachEvent("onChange", function (d) {
+				b.setInsensitiveRange(null, new Date(d.getTime() - 86400000));
+				duration(a, b, c);
+			});
+
+			var b_time_click = b.attachEvent("onChange", function (d) {
+				duration(a, b, c);
+			});
+
+
+			var id = gantt.attachEvent("onAfterLightbox", function () {
+				a.detachEvent(a_click);
+				a.detachEvent(a_time_click);
+				a.unload();
+				b.detachEvent(b_click);
+				b.detachEvent(b_time_click);
+				b.unload();
+				a = b = null;
+				this.detachEvent(id);
+			});
+
+			document.getElementById('calendar1').value = a.getDate(true);
+			document.getElementById('calendar2').value = b.getDate(true);
+			duration(a, b, c);
+		},
+		get_value: function (node, task) {
+			task.start_date = node._cal_start.getDate(false);
+			task.end_date = node._cal_end.getDate(false);
+			return task;
+		},
+		focus: function (node) {
+		}
+	};
+
+	gantt.config.lightbox.sections = [
+		{name: "description", height: 80, map_to: "text", type: "textarea", focus: true},
+		{name: "time", type: "dhx_calendar", map_to: "auto", skin: '', date_format: '%d %M %Y'}
+	];
+	gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";
+	gantt.init("gantt_here");
+	gantt.attachEvent("onLoadEnd", function(){
+		var first = gantt.getTaskByTime()[0];
+		gantt.showLightbox(first.id);
+	});
+	gantt.load("../common/data.json", "json");
+
+</script>
+</body>

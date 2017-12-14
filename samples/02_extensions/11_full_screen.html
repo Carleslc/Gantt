@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Full Screen</title>
+	<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+	<script src="../../codebase/ext/dhtmlxgantt_fullscreen.js" type="text/javascript" charset="utf-8"></script>
+
+	<script src="../common/testdata.js" type="text/javascript" charset="utf-8"></script>
+
+	<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title"
+		  charset="utf-8">
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+	<style type="text/css">
+		html, body {
+			height: 100%;
+			padding: 0px;
+			margin: 0px;
+		}
+
+		.gantt-fullscreen{
+			position: absolute;
+			bottom: 20px;
+			right: 20px;
+			width: 30px;
+			height: 30px;
+			padding: 2px;
+			font-size: 32px;
+			background: transparent;
+			cursor: pointer;
+			opacity: 0.5;
+			text-align: center;
+			-webkit-transition:background-color 0.5s, opacity 0.5s;
+			transition:background-color 0.5s, opacity 0.5s;
+		}
+		.gantt-fullscreen:hover{
+			background: rgba(150, 150, 150, 0.5);
+			opacity: 1;
+		}
+	</style>
+</head>
+<body>
+<div id="gantt_here" style='width:700px; height:600px;'></div>
+<script type="text/javascript">
+	gantt.attachEvent("onTemplatesReady", function(){
+		var toggle = document.createElement("i");
+		toggle.className = "fa fa-expand gantt-fullscreen";
+		gantt.toggleIcon = toggle;
+		gantt.$container.appendChild(toggle);
+		toggle.onclick = function() {
+			if (!gantt.getState().fullscreen) {
+				gantt.expand();
+			}
+			else {
+				gantt.collapse();
+			}
+		};
+	});
+	gantt.attachEvent("onExpand", function(){
+		var icon = gantt.toggleIcon;
+		if(icon){
+			icon.className = icon.className.replace("fa-expand", "fa-compress");
+		}
+
+	});
+	gantt.attachEvent("onCollapse", function(){
+		var icon = gantt.toggleIcon;
+		if(icon){
+			icon.className = icon.className.replace("fa-compress", "fa-expand");
+		}
+	});
+	gantt.init("gantt_here");
+
+	gantt.parse(demo_tasks);
+</script>
+</body>

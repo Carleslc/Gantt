@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Show Unscheduled Tasks</title>
+</head>
+<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+<script type="text/javascript" src="../common/testdata.js"></script>
+<body>
+<style type="text/css">
+	html, body{ padding:0px; margin:0px; height:100%; }
+</style>
+<div id="gantt_here" style='width:100%; height:100%;'></div>
+<script type="text/javascript">
+	gantt.config.scale_unit = "month";
+	gantt.config.date_scale = "%F, %Y";
+	gantt.config.scale_height = 50;
+	gantt.config.subscales = [
+		{unit:"day", step:1, date:"%j, %D" }
+	];
+
+	gantt.templates.rightside_text = function(start, end, task){
+		if(task.type == gantt.config.types.milestone){
+			return task.text;
+		}
+		return "";
+	};
+
+	gantt.locale.labels.time_enable_button = 'Schedule';
+	gantt.locale.labels.time_disable_button = 'Unschedule';
+	gantt.config.lightbox.sections = [
+		{name: "description", height: 70, map_to: "text", type: "textarea", focus: true},
+		{name: "time", map_to: "auto", button: true,  type: "duration_optional"}
+	];
+
+	gantt.config.lightbox.milestone_sections = [
+		{name: "description", height: 70, map_to: "text", type: "textarea", focus: true},
+		{name: "time", map_to: "auto", button: true, single_date:true, type: "duration_optional"}
+	];
+
+	gantt.attachEvent("onLightboxSave", function(id, task, is_new){
+		task.unscheduled = !task.start_date;
+		return true;
+	});
+
+	gantt.init("gantt_here");
+	gantt.parse({
+		"data":[
+			{"id":11, "text":"Project #1", type:gantt.config.types.project, "progress": 0.6, "open": true},
+
+			{"id":12, "text":"Task #1", "start_date":"03-04-2013", "duration":"5", "parent":"11", "progress": 1, "open": true},
+			{"id":13, "text":"Unscheduled Project", "start_date":"03-04-2013", type:gantt.config.types.project, "parent":"11", "progress": 0.5, "open": true},
+			{"id":14, "text":"Task #3", "start_date":"02-04-2013", "duration":"6", "parent":"11", "progress": 0.8, "open": true},
+			{"id":15, "text":"Task #4", "start_date":"03-04-2013", type:gantt.config.types.project, "parent":"11", "progress": 0.2, "open": true},
+			{"id":16, "text":"Final milestone", "start_date":"15-04-2013", type:gantt.config.types.milestone, "parent":"11", "progress": 0, "open": true},
+
+			{"id":17, "text":"Task #2.1", unscheduled:true, "parent":"13", "progress": 1, "open": true},
+			{"id":18, "text":"Task #2.2", unscheduled:true, "parent":"13", "progress": 0.8, "open": true},
+			{"id":19, "text":"Task #2.3", unscheduled:true, "parent":"13", "progress": 0.2, "open": true},
+			{"id":20, "text":"Task #2.4", unscheduled:true, "parent":"13", "progress": 0, "open": true},
+			{"id":21, "text":"Task #4.1", unscheduled:true, "parent":"15", "progress": 0.5, "open": true},
+			{"id":22, "text":"Task #4.2", unscheduled:true, "parent":"15", "progress": 0.1, "open": true},
+			{"id":23, "text":"Mediate milestone", unscheduled:true,  type:gantt.config.types.milestone, "parent":"15", "progress": 0, "open": true}
+		],
+		"links":[
+			{"id":"10","source":"11","target":"12","type":"1"},
+			{"id":"11","source":"11","target":"13","type":"1"},
+			{"id":"12","source":"11","target":"14","type":"1"},
+			{"id":"13","source":"11","target":"15","type":"1"},
+			{"id":"14","source":"23","target":"16","type":"0"},
+			{"id":"15","source":"13","target":"17","type":"1"},
+			{"id":"16","source":"17","target":"18","type":"0"},
+			{"id":"17","source":"18","target":"19","type":"0"},
+			{"id":"18","source":"19","target":"20","type":"0"},
+			{"id":"19","source":"15","target":"21","type":"2"},
+			{"id":"20","source":"15","target":"22","type":"2"},
+			{"id":"21","source":"15","target":"23","type":"0"}
+		]
+	});
+</script>
+</body>

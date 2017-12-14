@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Gantt chart with resource panel</title>
+	<script src="../../codebase/dhtmlxgantt.js"></script>
+	<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css">
+	<style type="text/css">
+		html, body{ padding:0px; margin:0px; height:100%; }
+
+		.gantt_grid_scale .gantt_grid_head_cell,
+		.gantt_task .gantt_task_scale .gantt_scale_cell
+		{
+			font-weight: bold;
+			font-size: 14px;
+			color: rgba(0,0,0, 0.7);
+		}
+
+		.workday_ok{
+			text-align:center;
+			background: #a0f9a0;
+		}
+		.workday_over{
+			text-align:center;
+			background: #ffd5d5;
+		}
+	</style>
+</head>
+<body>
+<div id="gantt_here" style='width:100%; height:100%;'></div>
+<script type="text/javascript">
+
+	function getResourceTasks(resourceId){
+		var res = [];
+		gantt.eachTask(function(task){
+			if(task.user == resourceId && task.type != gantt.config.types.project){
+				res.push(task);
+			}
+		});
+		return res;
+	}
+
+	function calculateResourceLoad(tasks, scale){
+		var step = scale.unit;
+		var timegrid = {};
+
+		for(var i = 0; i < tasks.length; i++){
+			var task = tasks[i];
+
+			var currDate = gantt.date[step + "_start"](new Date(task.start_date));
+
+			while(currDate < task.end_date){
+
+				var date = currDate;
+				currDate = gantt.date.add(currDate, 1, step);
+
+				if(!gantt.isWorkTime({date:date, task:task})){
+					continue;
+				}
+
+				var timestamp = date.valueOf();
+				if(!timegrid[timestamp])
+					timegrid[timestamp] = 0;
+
+				timegrid[timestamp] += 8;
+			}
+		}
+
+		var timetable = [];
+		var start, end;
+		for(var i in timegrid){
+			start = new Date(i*1);
+			end = gantt.date.add(start, 1, step);
+			timetable.push({
+				start_date: start,
+				end_date: end,
+				value: timegrid[i]
+			});
+		}
+
+		return timetable;
+	}
+
+	var renderResourceLine = function(resource, timeline){
+		var tasks = getResourceTasks(resource.id);
+		var timetable = calculateResourceLoad(tasks, timeline.getScale());
+
+		var row = document.createElement("div");
+
+		for(var i = 0; i < timetable.length; i++){
+
+			var day = timetable[i];
+
+			var css = "";
+			if(!day.value){
+				css = "workday_idle";
+			}else if(day.value <= 8){
+				css = "workday_ok";
+			}else{
+				css = "workday_over";
+			}
+
+			var sizes = timeline.getItemPosition(resource, day.start_date, day.end_date);
+			var el = document.createElement('div');
+			el.className = css;
+
+			el.style.cssText = [
+				'left:'+ sizes.left + 'px',
+				'width:'+ sizes.width + 'px',
+				'position:absolute',
+				'height:'+ (gantt.config.row_height - 1) + 'px',
+				'line-height:'+ sizes.height + 'px',
+				'top:'+ sizes.top + 'px'
+			].join(";");
+
+			el.innerHTML = day.value;
+			row.appendChild(el);
+		}
+		return row;
+	};
+
+	var mainGridConfig = {
+		columns:[
+			{name:"text", tree:true, width:200, resize:true },
+			{name:"start_date", align: "center", width:80, resize:true },
+			{name:"owner", align: "center", width:60, label:"Owner", template:function(task){
+				var store = gantt.getDatastore("resource");
+				var owner = store.getItem(task.user);
+				if(owner){
+					return owner.label;
+				}else{
+					return "N/A";
+				}
+			}
+			},
+			{name:"duration", width:50, align: "center" },
+			{name:"add", width:44 }
+		]
+	};
+
+	var resourceGridConfig = {
+		columns:[
+			{name:"name", label:"Name", template: function(resource){
+				return resource.label;
+			}},
+			{name:"workload", label:"Workload", template: function(resource){
+				var tasks = getResourceTasks(resource.id);
+
+				var totalDuration = 0;
+				for(var i = 0; i < tasks.length; i++){
+					totalDuration += tasks[i].duration;
+				}
+
+				return (totalDuration || 0)*8 + "";
+			}}
+		]
+	};
+
+	var resourceLayers = [
+		gantt.$ui.layers.taskBg,
+		renderResourceLine
+	];
+
+	gantt.config.layout = {
+		css: "gantt_container",
+			rows:[
+			{
+				cols: [
+					{view: "grid", id: "grid", config: mainGridConfig, scrollY:"scrollVer"},
+					{resizer: true, width: 1},
+					{view: "timeline", id: "timeline", scrollX:"scrollHor", scrollY:"scrollVer"},
+					{view: "scrollbar", scroll: "y", id:"scrollVer"}
+				]
+			},
+			{resizer: true, width: 1, mode:"y"},
+			{
+				cols: [
+					{view: "grid", id: "resourceGrid", width:435, bind:"resource", config:resourceGridConfig, scrollY:"resourceVScroll"},
+					{resizer: true, width: 1},
+					{view: "timeline", id: "resourceTimeline", scrollX:"scrollHor", bind:"resource", bindLinks: null,
+						layers: resourceLayers, scrollY:"resourceVScroll"},
+					{view: "scrollbar", scroll: "y", id:"resourceVScroll"}
+				]
+			},
+			{view: "scrollbar", scroll: "x", id:"scrollHor"}
+		]
+	};
+
+	var resourcesStore = gantt.createDatastore({
+		name:"resource",
+		initItem: function(item){
+			item.id = item.key || gantt.uid();
+			return item;
+		}
+	});
+
+	var tasksStore = gantt.getDatastore("task");
+	tasksStore.attachEvent("onStoreUpdated", function(id, item, mode){
+		resourcesStore.refresh();
+	});
+
+
+	gantt.init("gantt_here");
+	gantt.load("data.json");
+
+	resourcesStore.parse([// resources
+		{key:'0', label: "N/A"},
+		{key:'1', label: "John"},
+		{key:'2', label: "Mike"},
+		{key:'3', label: "Anna"}
+	]);
+</script>
+</body>

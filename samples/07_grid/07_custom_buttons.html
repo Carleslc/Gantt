@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Custom Buttons in a Grid</title>
+</head>
+<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" title="no title" charset="utf-8">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+<script type="text/javascript" src="../common/testdata.js"></script>
+<style type="text/css">
+	html, body{ height:100%; padding:0px; margin:0px; overflow: hidden;}
+	.fa{
+		cursor: pointer;
+		font-size: 14px;
+		text-align: center;
+		opacity: 0.2;
+		padding: 5px;
+	}
+	.fa:hover{
+		opacity: 1;
+	}
+	.fa-pencil{
+		color: #ffa011;
+	}
+	.fa-plus{
+		color: #328EA0;
+	}
+	.fa-times{
+		color: red;
+	}
+</style>
+<body>
+<div id="gantt_here" style='width:100%; height:100%;'></div>
+
+
+<script type="text/javascript">
+	gantt.config.scale_unit = "month";
+	gantt.config.date_scale = "%F, %Y";
+	gantt.config.scale_height = 50;
+	gantt.config.subscales = [
+		{unit:"day", step:1, date:"%j, %D" }
+	];
+
+	var colHeader = '<div class="gantt_grid_head_cell gantt_grid_head_add" onclick="gantt.createTask()"></div>',
+		colContent = function(task){
+			return ('<i class="fa gantt_button_grid gantt_grid_edit fa-pencil" onclick="clickGridButton('+task.id+', \'edit\')"></i>' +
+					'<i class="fa gantt_button_grid gantt_grid_add fa-plus" onclick="clickGridButton('+task.id+', \'add\')"></i>' +
+					'<i class="fa gantt_button_grid gantt_grid_delete fa-times" onclick="clickGridButton('+task.id+', \'delete\')"></i>');
+		};
+	gantt.config.columns = [
+		{name:"text", tree:true, width:'*', resize:true },
+		{name:"start_date", align: "center", resize:true },
+		{name:"duration", align: "center" },
+		{
+			name:"buttons",
+			label:colHeader,
+			width:75,
+			template:colContent
+		}
+	];
+	function clickGridButton(id, action) {
+		switch (action) {
+			case "edit":
+				gantt.showLightbox(id);
+				break;
+			case "add":
+				gantt.createTask(null, id);
+				break;
+			case "delete":
+				gantt.confirm({
+					title: gantt.locale.labels.confirm_deleting_title,
+					text: gantt.locale.labels.confirm_deleting,
+					callback: function(res){
+						if(res)
+							gantt.deleteTask(id);
+					}
+				});
+				break;
+		}
+	}
+	gantt.init("gantt_here");
+	gantt.parse(projects_with_milestones);
+
+</script>
+</body>

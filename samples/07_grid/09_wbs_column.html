@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Show Task WBS Codes (Outline Numbers)</title>
+</head>
+<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" title="no title" charset="utf-8">
+
+<script type="text/javascript" src="../common/testdata.js"></script>
+<style type="text/css">
+	html, body{ height:100%; padding:0px; margin:0px; overflow: hidden;}
+</style>
+<body>
+<div id="gantt_here" style='width:100%; height:100%;'></div>
+
+
+<script type="text/javascript">
+	(function () {
+		var delTaskParent;
+
+		function checkParents(id) {
+			setTaskType(id);
+			var parent = gantt.getParent(id);
+			if (parent != gantt.config.root_id) {
+				checkParents(parent);
+			}
+		}
+
+		function setTaskType(id) {
+			id = id.id ? id.id : id;
+			var task = gantt.getTask(id);
+			var type = gantt.hasChild(task.id) ? gantt.config.types.project : gantt.config.types.task;
+			if (type != task.type) {
+				task.type = type;
+				gantt.updateTask(id);
+			}
+		}
+
+		gantt.attachEvent("onParse", function () {
+			gantt.eachTask(function (task) {
+				setTaskType(task);
+			});
+		});
+
+		gantt.attachEvent("onAfterTaskAdd", function onAfterTaskAdd(id) {
+			gantt.batchUpdate(function () {
+				checkParents(id)
+			});
+		});
+
+		gantt.attachEvent("onBeforeTaskDelete", function onBeforeTaskDelete(id, task) {
+			delTaskParent = gantt.getParent(id);
+			return true;
+		});
+
+		gantt.attachEvent("onAfterTaskDelete", function onAfterTaskDelete(id, task) {
+			if (delTaskParent != gantt.config.root_id) {
+				gantt.batchUpdate(function () {
+					checkParents(delTaskParent)
+				});
+			}
+		});
+	})();
+
+	gantt.config.columns = [
+		{name:"wbs", label:"WBS", width:40, template:gantt.getWBSCode },
+		{name:"text", label:"Task name", tree:true, width:170 },
+		{name:"start_date", align: "center", width: 90},
+		{name:"duration", align: "center" , width: 60},
+		{name:"add", width:40}
+	];
+
+	gantt.init("gantt_here");
+	gantt.parse(demo_tasks);
+
+</script>
+</body>

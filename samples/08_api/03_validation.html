@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Validation</title>
+</head>
+	<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+	<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+	<script type="text/javascript" src="../common/testdata.js"></script>
+	<style type="text/css">
+		html, body{ height:100%; padding:0px; margin:0px; overflow: hidden;}
+        .busy{
+            background: #FFC8C7 !important;
+        }
+	</style>
+<body>
+	<div id="gantt_here" style='width:100%; height:100%;'></div>
+	<script type="text/javascript">
+
+		gantt.config.columns = [
+			{name:"text", label:"Task name", tree:true, width:'*' },
+			{name:"start_date", align: "center" },
+			{name:"assigned", label:"Assigned to", align: "center", width:100,
+				template: function(item) {
+					if (!item.users) return "Nobody";
+					return item.users.join(", ");
+				}
+			}
+		];
+
+		gantt.init("gantt_here");
+		gantt.parse(users_data);
+
+		function validateResources(id){
+			var task = gantt.getTask(id);
+			var from = new Date(task.start_date),
+					to = new Date(task.end_date),
+					busy_from = null,
+					busy_to = null,
+					busy_task = null,
+					busy = false;
+
+
+			var tasks = gantt.getTaskByTime(from, to);
+			for(var i=0;i<tasks.length; i++){
+				if (tasks[i].id != id && task.users.join() == tasks[i].users.join()){
+					if(!busy_from || busy_from.valueOf() < tasks[i].start_date.valueOf())
+						busy_from = new Date(tasks[i].start_date);
+
+					if(!busy_to || busy_to.valueOf() < tasks[i].end_date.valueOf())
+						busy_to = new Date(tasks[i].end_date);
+					busy_task = tasks[i].id;
+					busy = true;
+
+
+				}
+			}
+			if(busy){
+				gantt.templates.task_cell_class = function(task, date){
+					if ((date.valueOf() < busy_to.valueOf() && date.valueOf() >= busy_from.valueOf())){
+						return "busy";
+					}
+				};
+				gantt.message(task.users + " are already busy on <b>" + gantt.getTask(busy_task).text + "</b> at this time!");
+			}else{
+				gantt.templates.task_cell_class = function(){};
+
+			}
+
+			gantt.refreshData();
+			return !busy;
+		}
+
+		gantt.attachEvent("onBeforeTaskChanged", function(id, mode, task){
+			if(mode == gantt.config.drag_mode.move || mode == gantt.config.drag_mode.resize){
+				return validateResources(id);
+			}
+			return true;
+		});
+		gantt.attachEvent("onLightboxSave", function(id, task, is_new){
+			return validateResources(id);
+		});
+	</script>
+</body>                                                                                                                                                                                                                                                                                                                                                                                                                     

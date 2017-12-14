@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Task styles</title>
+</head>
+<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<script src="//export.dhtmlx.com/gantt/api.js" type="text/javascript" charset="utf-8"></script>
+
+<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+<link rel="stylesheet" href="../common/customstyles.css" type="text/css">
+<style type="text/css">
+    html, body{ height:100%; padding:0px; margin:0px; overflow: hidden;}
+</style>
+
+
+<script type="text/javascript" src="../common/testdata.js"></script>
+<body>
+
+<input value="Export to PDF" type="button" onclick="exportGantt(&quot;pdf&quot;)" style="margin:20px;">
+<input value="Export to PNG" type="button" onclick="exportGantt(&quot;png&quot;)" style="margin:20px;">
+
+<div id="gantt_here" style='width:100%; height:100%;'></div>
+<script type="text/javascript">
+    gantt.init("gantt_here");
+    gantt.config.columns=[
+        {name:"text",       label:"Task name",  tree:true, width:"*" },
+        {name:"start_date", label:"Start time", align: "center" },
+        {name:"priority",   label:"Priority",   align: "center", template:function(obj){
+            if (obj.priority == 1){ return "High"}
+            if (obj.priority == 2){ return "Medium"}
+            return "Low"
+        } }
+    ];
+    gantt.templates.task_class  = function(start, end, task){
+        switch (task.priority){
+            case "1":
+                return "high";
+                break;
+            case "2":
+                return "medium";
+                break;
+            case "3":
+                return "low";
+                break;
+        }
+    };
+
+    gantt.parse(users_data);
+
+    function exportGantt(mode){
+        if (mode == "png")
+            gantt.exportToPNG({
+                header:'<link rel="stylesheet" href="//docs.dhtmlx.com/gantt/samples/common/customstyles.css" type="text/css">'
+            });
+        else if (mode == "pdf")
+            gantt.exportToPDF({
+                header:'<link rel="stylesheet" href="//docs.dhtmlx.com/gantt/samples/common/customstyles.css" type="text/css">'
+            });
+    }
+</script>
+</body>

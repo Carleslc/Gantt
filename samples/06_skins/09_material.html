@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Material theme</title>
+</head>
+	<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+	<script src="../../codebase/ext/dhtmlxgantt_quick_info.js" type="text/javascript" charset="utf-8"></script>
+	<script src="../../codebase/ext/dhtmlxgantt_tooltip.js" type="text/javascript" charset="utf-8"></script>
+	<script src="../../codebase/ext/dhtmlxgantt_critical_path.js" type="text/javascript" charset="utf-8"></script>
+	<script src="../../codebase/locale/locale.js" type="text/javascript" charset="utf-8"></script>
+	<link rel="stylesheet" href="../../codebase/skins/dhtmlxgantt_material.css" type="text/css" title="no title" charset="utf-8">
+
+	<script type="text/javascript" src="../common/testdata.js"></script>
+	<style type="text/css">
+		html, body{
+			background: #fff;
+			font-family: arial;
+			height:100%;
+			padding:0px;
+			margin:0px;
+			overflow: hidden;
+		}
+		.header{
+			height: 50px;
+			text-align: center;
+			line-height: 50px;
+		}
+		.main-content{
+			height: 600px;
+			height: calc(100vh - 50px);
+		}
+	</style>
+<body>
+	<div class="header">
+		<input type="button" value="Show Lightbox" onclick="gantt.createTask()"/>
+		<input type="button" value="Show Quick Info" onclick="gantt.showQuickInfo(gantt.getTaskByTime()[0].id)"/>
+		<input type="button" value="Show message" onclick="gantt.message({text:'Some text',expire:50000})"/>
+		<input type="button" value="Show error" onclick="gantt.message({text:'Some text', type:'error'})"/>
+		<input type="button" value="Show alert" onclick="gantt.alert({text:'Some text'})"/>
+		<input type="button" value="Show alert with header" onclick="gantt.alert({text:'Some text', title:'Title'})"/>
+		<input type="button" value="Show critical" onclick="toggleCritical()"/>
+	</div>
+	<div class="main-content">
+		<div id="gantt_here" style='width:100%; height:100%;padding: 0px;'></div>
+	</div>
+	<script type="text/javascript">
+		var toggleCritical = function () {
+			if (gantt.config.highlight_critical_path)
+				gantt.config.highlight_critical_path = !true;
+			else 
+				gantt.config.highlight_critical_path = true;
+			gantt.render();
+		}
+
+		gantt.config.scale_height = 36*3;
+		var weekScaleTemplate = function(date) {
+			var dateToStr = gantt.date.date_to_str("%d %M");
+			var endDate = gantt.date.add(gantt.date.add(date, 1, "week"), -1, "day");
+			return dateToStr(date) + " - " + dateToStr(endDate);
+		};
+
+		gantt.config.columns = [
+		    {name:"wbs", label:"WBS", width:40, template:gantt.getWBSCode, "resize": true}, 
+		    {name:"text", label:"Task name", tree:true, width:170, "resize": true, min_width: 10},
+		    {name:"start_date", align: "center", width: 90, "resize": true},
+		    {name:"duration", align: "center" , width: 80, "resize": true},
+		    {name:"add", width:40}
+		];
+
+		gantt.templates.rightside_text = function(start, end, task){
+		    if(task.type == gantt.config.types.milestone)
+		    	return task.text + " / ID: #" + task.id;
+		    return "";
+		};
+
+		gantt.config.date_scale = "%D";
+		gantt.config.start_on_monday = false;
+		//gantt.config.static_background = true;
+
+		gantt.config.subscales = [
+			{unit:"month", step:1, date:"%F"},
+			{unit:"week", step:1, template:weekScaleTemplate }
+		];
+		gantt.init("gantt_here");		
+		gantt.message({text:"Some text", expire:-1});
+		gantt.message({text:"Some text", type:"error", expire:-1});
+		gantt.parse(projects_milestones_critical);
+	</script>
+</body>

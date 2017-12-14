@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Resource level calendars</title>
+</head>
+<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+<style type="text/css">
+	html, body { height: 100%; padding:0px; margin:0px; overflow: hidden; }
+
+	.gantt_task_cell.week_end{
+		background-color: #e8e8e8;
+	}
+	.gantt_task_row.gantt_selected .gantt_task_cell.week_end{
+		background-color: #e0e0dd !important;
+	}
+
+</style>
+<body>
+<div id="gantt_here" style='width:100%; height:100%;'></div>
+<script type="text/javascript">
+
+	gantt.message("Each owner has it's own work calendar. Double click any task to check the details");
+
+	gantt.config.work_time = true;
+	gantt.config.scale_unit = "day";
+	gantt.config.date_scale = "%D, %d";
+	gantt.config.min_column_width = 60;
+	gantt.config.duration_unit = "day";
+	gantt.config.scale_height = 20*3;
+	gantt.config.row_height = 28;
+
+	var weekScaleTemplate = function(date) {
+		var dateToStr = gantt.date.date_to_str("%d %M");
+		var weekNum = gantt.date.date_to_str("(week %W)");
+		var endDate = gantt.date.add(gantt.date.add(date, 1, "week"), -1, "day");
+		return dateToStr(date) + " - " + dateToStr(endDate) + " " + weekNum(date);
+	};
+
+	gantt.config.subscales = [
+		{unit:"month", step:1, date:"%F, %Y"},
+		{unit:"week", step:1, template:weekScaleTemplate}
+	];
+
+	gantt.serverList("user", [
+		{key:'0', label: "N/A"},
+		{key:'1', label: "John"},
+		{key:'2', label: "Mike"},
+		{key:'3', label: "Anna"}
+	]);
+
+	function byId(list, id) {
+		for(var i = 0; i < list.length; i++) {
+			if(list[i].key == id)
+				return list[i].label || "";
+		}
+		return "";
+	}
+
+	gantt.locale.labels.column_owner =
+		gantt.locale.labels.section_owner = "Owner";
+	gantt.locale.labels.column_duration = "Effort";
+	gantt.locale.labels.column_time = "Time";
+
+	gantt.config.columns = [
+		{name:"text", label:"Task name", tree:true, width:170 },
+		{name:"owner", width:80, align: "center", template: function(item) { return byId(gantt.serverList('user'), item.user) }, width: 60},
+		{name:"start_date", align: "center", width: 90},
+		{name:"time", align: "center" , width: 60, template: function(task) {
+			var days = 0;
+			var date = task.start_date;
+			while(date < task.end_date) {
+				days++;
+				date = gantt.date.add(date, 1, "day");
+			}
+			return days + "";
+		}},
+		{name:"duration", align: "center" , width: 60},
+		{name:"add", width:40}
+	];
+
+	gantt.config.lightbox.sections = [
+		{name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
+		{name: "owner", height: 22, map_to: "user", type: "select", options: gantt.serverList("user")},
+		{name: "time", type: "duration", map_to: "auto"}
+	];
+
+	var johnCalendarId = gantt.addCalendar({
+		worktime: {
+			days: [0, 1, 1, 1, 1, 1, 0]
+		}
+	}),
+	mikeCalendarId = gantt.addCalendar({
+		worktime: {
+			days: [1, 0, 0, 0, 0, 0, 1]
+		}
+	}),
+	annaCalendarId = gantt.addCalendar({
+		worktime: {
+			days: [0, 1, 1, 1, 0, 1, 1]
+		}
+	});
+
+	gantt.config.resource_calendars = {
+		"user":{
+			1 : johnCalendarId,
+			2 : mikeCalendarId,
+			3 : annaCalendarId
+		}
+	};
+
+	gantt.templates.task_cell_class = function(task, date) {
+		if(!gantt.isWorkTime({date: date, task:task}))
+			return "week_end";
+		return "";
+	};
+
+	gantt.templates.task_text = function(start, end, task) {
+		var text = [task.text];
+		text.push(byId(gantt.serverList('user'), task.user));
+		return text.join(", ");
+	};
+
+	function updateTaskTiming(task) {
+		task.start_date = gantt.getClosestWorkTime({
+			dir: "future",
+			date: task.start_date,
+			unit: gantt.config.duration_unit,
+			task: task
+		});
+		task.end_date = gantt.calculateEndDate(task);
+	}
+
+	gantt.attachEvent("onLightboxSave", function(id, task, is_new){
+		updateTaskTiming(task);
+		return true;
+	});
+
+
+	gantt.init("gantt_here");
+	gantt.parse({
+		"data":[
+			{"id":11, user:"0", "text":"Project #1", "start_date":"28-03-2013", "duration":"3", "progress": 0.6, "open": true},
+			{"id":1, user:"1", "text":"Project #2", "start_date":"01-04-2013", "duration":"5", "progress": 0.4, "open": true},
+
+			{"id":2, user:"0", "text":"Task #1", "start_date":"02-04-2013", "duration":"2", "parent":"1", "progress":0.5, "open": true},
+			{"id":3, user:"2", "text":"Task #2", "start_date":"11-04-2013", "duration":"4", "parent":"1", "progress": 0.6, "open": true},
+			{"id":4, user:"3", "text":"Task #3", "start_date":"13-04-2013", "duration":"3", "parent":"1", "progress": 0.5, "open": true},
+			{"id":5, user:"0", "text":"Task #1.1", "start_date":"02-04-2013", "duration":"7", "parent":"2", "progress": 0.6, "open": true},
+			{"id":6, user:"1", "text":"Task #1.2", "start_date":"03-04-2013", "duration":"7", "parent":"2", "progress": 0.6, "open": true},
+			{"id":7, user:"2", "text":"Task #2.1", "start_date":"11-04-2013", "duration":"8", "parent":"3", "progress": 0.6, "open": true},
+			{"id":8, user:"0", "text":"Task #3.1", "start_date":"14-04-2013", "duration":"5", "parent":"4", "progress": 0.5, "open": true},
+			{"id":9, user:"0", "text":"Task #3.2", "start_date":"14-04-2013", "duration":"4", "parent":"4", "progress": 0.5, "open": true},
+			{"id":10, user:"1", "text":"Task #3.3", "start_date":"14-04-2013", "duration":"3", "parent":"4", "progress": 0.5, "open": true},
+
+			{"id":12, user:"0", "text":"Task #1", "start_date":"03-04-2013", "duration":"5", "parent":"11", "progress": 1, "open": true},
+			{"id":13, user:"1", "text":"Task #2", "start_date":"02-04-2013", "duration":"7", "parent":"11", "progress": 0.5, "open": true},
+			{"id":14, user:"0", "text":"Task #3", "start_date":"02-04-2013", "duration":"6", "parent":"11", "progress": 0.8, "open": true},
+			{"id":15, user:"2", "text":"Task #4", "start_date":"02-04-2013", "duration":"5", "parent":"11", "progress": 0.2, "open": true},
+			{"id":16, user:"0", "text":"Task #5", "start_date":"02-04-2013", "duration":"7", "parent":"11", "progress": 0, "open": true},
+
+			{"id":17, user:"0", "text":"Task #2.1", "start_date":"03-04-2013", "duration":"2", "parent":"13", "progress": 1, "open": true},
+			{"id":18, user:"0", "text":"Task #2.2", "start_date":"06-04-2013", "duration":"3", "parent":"13", "progress": 0.8, "open": true},
+			{"id":19, user:"0", "text":"Task #2.3", "start_date":"10-04-2013", "duration":"4", "parent":"13", "progress": 0.2, "open": true},
+			{"id":20, user:"0", "text":"Task #2.4", "start_date":"10-04-2013", "duration":"4", "parent":"13", "progress": 0, "open": true},
+			{"id":21, user:"0", "text":"Task #4.1", "start_date":"03-04-2013", "duration":"4", "parent":"15", "progress": 0.5, "open": true},
+			{"id":22, user:"0", "text":"Task #4.2", "start_date":"03-04-2013", "duration":"4", "parent":"15", "progress": 0.1, "open": true},
+			{"id":23, user:"0", "text":"Task #4.3", "start_date":"03-04-2013", "duration":"5", "parent":"15", "progress": 0, "open": true}
+		],
+		"links":[
+			{"id":"1","source":"1","target":"2","type":"1"},
+			{"id":"2","source":"2","target":"3","type":"0"},
+			{"id":"3","source":"3","target":"4","type":"0"},
+			{"id":"4","source":"2","target":"5","type":"2"},
+			{"id":"5","source":"2","target":"6","type":"2"},
+			{"id":"6","source":"3","target":"7","type":"2"},
+			{"id":"7","source":"4","target":"8","type":"2"},
+			{"id":"8","source":"4","target":"9","type":"2"},
+			{"id":"9","source":"4","target":"10","type":"2"},
+			{"id":"10","source":"11","target":"12","type":"1"},
+			{"id":"11","source":"11","target":"13","type":"1"},
+			{"id":"12","source":"11","target":"14","type":"1"},
+			{"id":"13","source":"11","target":"15","type":"1"},
+			{"id":"14","source":"11","target":"16","type":"1"},
+			{"id":"15","source":"13","target":"17","type":"1"},
+			{"id":"16","source":"17","target":"18","type":"0"},
+			{"id":"17","source":"18","target":"19","type":"0"},
+			{"id":"18","source":"19","target":"20","type":"0"},
+			{"id":"19","source":"15","target":"21","type":"2"},
+			{"id":"20","source":"15","target":"22","type":"2"},
+			{"id":"21","source":"15","target":"23","type":"2"}
+		]
+	});
+
+</script>
+</body>

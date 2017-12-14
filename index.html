@@ -22,23 +22,25 @@
         integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
 
-  <div class="container">
+  <div>
     <div class="row align-items-center">
-      <div class="col-md-5">
+      <div class="col-md-4">
         <!-- Load data -->
         <div class="row align-items-center">
-          <a class="font-weight-light" style="margin-left: 10px">Load</a>
+          <a class="font-weight-light" style="margin-left: 40px">Load</a>
           <label class="custom-file" style="margin-left: 10px">
             <input type="file" id="load_file" class="custom-file-input">
             <span class="custom-file-control"></span>
           </label>
         </div>
       </div>
-      <div class="col-md-7">
+      <div class="col-md-8">
         <!-- Export data -->
-        <input value="Export to PNG" type="button" onclick='gantt.exportToPNG()' class="btn btn-primary" style='margin:20px;'>
-        <input value="Export to PDF" type="button" onclick='gantt.exportToPDF()' class="btn btn-primary" style='margin:20px;'>
-        <button id="save" class="btn btn-primary" style='margin:20px;'>Save</button>
+        <input value="Export to PNG" type="button" onclick='gantt.exportToPNG()' class="btn btn-primary" style='margin:10px;'>
+        <input value="Export to PDF" type="button" onclick='gantt.exportToPDF()' class="btn btn-primary" style='margin:10px;'>
+        <input value="Export to Excel" type="button" onclick='gantt.exportToExcel()' class="btn btn-primary" style='margin:10px;'>
+        <input value="Export to iCal" type="button" onclick='gantt.exportToICal()' class="btn btn-primary" style='margin:10px;'>
+        <button id="save" class="btn btn-primary" style='margin:10px;'>Save</button>
         <a download="gantt.json" id="download_json" class="btn btn-success" style="display: none">Download</a>
       </div>
     </div>

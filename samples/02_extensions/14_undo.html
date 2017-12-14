@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Undo/Redo changes in Gantt</title>
+</head>
+	<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+	<script src="../../codebase/ext/dhtmlxgantt_auto_scheduling.js" type="text/javascript" charset="utf-8"></script>
+	<script src="../../codebase/ext/dhtmlxgantt_undo.js" type="text/javascript" charset="utf-8"></script>
+
+	<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+	<script type="text/javascript" src="../common/testdata.js"></script>
+	<style type="text/css">
+		html, body{ height:100%; padding:0px; margin:0px; overflow: hidden;}
+
+		.weekend{ background: #f4f7f4 !important;}
+	</style>
+<body>
+	<div style="text-align:center;">
+		<input value="Undo" type="button" onclick='gantt.undo()' style='margin:20px;'>
+		<input value="Redo" type="button" onclick='gantt.redo()' style='margin:20px;'>
+	</div>
+	<div id="gantt_here" style='width:100%; height:500px;'></div>
+	<script type="text/javascript">
+		var demo_tasks ={
+			"data":[
+				{"id":11, "text":"Project #1", type:gantt.config.types.project, "progress": 0.6, "open": true},
+
+				{"id":12, "text":"Task #1", "start_date":"02-04-2013", "duration":"5", "parent":"11", "progress": 1, "open": true},
+				{"id":13, "text":"Task #2", "start_date":"03-04-2013", type:gantt.config.types.project, "parent":"11", "progress": 0.5, "open": true},
+				{"id":14, "text":"Task #3", "start_date":"02-04-2013", "duration":"6", "parent":"11", "progress": 0.8, "open": true},
+				{"id":15, "text":"Task #4", type:gantt.config.types.project, "parent":"11", "progress": 0.2, "open": true},
+				{"id":16, "text":"Final milestone", "start_date":"15-04-2013", type:gantt.config.types.milestone, "parent":"11", "progress": 0, "open": true},
+
+				{"id":17, "text":"Task #2.1", "start_date":"03-04-2013", "duration":"2", "parent":"13", "progress": 1, "open": true},
+				{"id":18, "text":"Task #2.2", "start_date":"06-04-2013", "duration":"3", "parent":"13", "progress": 0.8, "open": true},
+				{"id":19, "text":"Task #2.3", "start_date":"10-04-2013", "duration":"4", "parent":"13", "progress": 0.2, "open": true},
+				{"id":20, "text":"Task #2.4", "start_date":"10-04-2013", "duration":"4", "parent":"13", "progress": 0, "open": true},
+				{"id":21, "text":"Task #4.1", "start_date":"02-04-2013", "duration":"4", "parent":"15", "progress": 0.5, "open": true},
+				{"id":22, "text":"Task #4.2", "start_date":"02-04-2013", "duration":"4", "parent":"15", "progress": 0.1, "open": true},
+				{"id":23, "text":"Mediate milestone", "start_date":"14-04-2013", type:gantt.config.types.milestone, "parent":"15", "progress": 0, "open": true}
+			],
+			"links":[
+				{"id":"10","source":"11","target":"12","type":"1"},
+				{"id":"11","source":"11","target":"13","type":"1"},
+				{"id":"12","source":"11","target":"14","type":"1"},
+				{"id":"13","source":"11","target":"15","type":"1"},
+				{"id":"14","source":"23","target":"16","type":"0"},
+				{"id":"15","source":"13","target":"17","type":"1"},
+				{"id":"16","source":"17","target":"18","type":"0"},
+				{"id":"17","source":"18","target":"19","type":"0"},
+				{"id":"18","source":"19","target":"20","type":"0"},
+
+				{"id":"21","source":"15","target":"23","type":"0"}
+			]
+		};
+
+
+		gantt.templates.scale_cell_class = function(date){
+			if(date.getDay()==0||date.getDay()==6){
+				return "weekend";
+			}
+		};
+		gantt.templates.task_cell_class = function(item,date){
+			if(date.getDay()==0||date.getDay()==6){
+				return "weekend" ;
+			}
+		};
+
+		gantt.config.work_time = true;
+
+
+		gantt.config.auto_scheduling = true;
+		gantt.config.auto_scheduling_strict = true;
+
+		gantt.config.xml_date = "%d-%m-%Y";
+
+		gantt.config.start_date = new Date(2013, 3, 1);
+		gantt.config.end_date = new Date(2013, 5, 1);
+
+
+
+		gantt.attachEvent("onBeforeAutoSchedule", function(){
+			gantt.message("Recalculating project schedule...");
+			return true;
+		});
+		gantt.attachEvent("onAfterTaskAutoSchedule", function(task, new_date, constraint, predecessor){
+			gantt.message({
+				text: "<b>"+task.text+"</b> has been rescheduled to " + gantt.templates.task_date(new_date) + " due to <b>"+predecessor.text+"</b> constraint",
+				expire:4000
+			});
+		});
+
+
+		gantt.init("gantt_here");
+		gantt.parse (demo_tasks);
+	</script>
+</body>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Specify inline colors for Tasks and Links</title>
+	<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+	<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+	<script type="text/javascript" src="../common/testdata.js"></script>
+	<style type="text/css">
+		html, body{ padding:0px; margin:0px; height:100%; }
+	</style>
+</head>
+<body>
+<div id="gantt_here" style='width:100%; height:100%;'></div>
+<script type="text/javascript">
+	gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";
+
+	gantt.locale.labels.section_priority = "Color";
+	gantt.locale.labels.section_textColor = "Text Color";
+
+	var colors = [
+		{key:"", label:"Default"},
+		{key:"#4B0082",label:"Indigo"},
+		{key:"#FFFFF0",label:"Ivory"},
+		{key:"#F0E68C",label:"Khaki"},
+		{key:"#B0C4DE",label:"LightSteelBlue"},
+		{key:"#32CD32",label:"LimeGreen"},
+		{key:"#7B68EE",label:"MediumSlateBlue"},
+		{key:"#FFA500",label:"Orange"},
+		{key:"#FF4500",label:"OrangeRed"}
+	];
+
+	gantt.config.lightbox.sections = [
+		{name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
+		{name: "priority", height: 22, map_to: "color", type: "select", options:colors},
+		{name: "textColor", height: 22, map_to: "textColor", type: "select", options:colors},
+		{name: "time", type: "duration", map_to: "auto"}
+	];
+
+	gantt.init("gantt_here");
+	gantt.load("../common/data.json", "json", function(){
+		gantt.showLightbox(gantt.getTaskByTime()[0].id);
+	});
+
+</script>
+</body>

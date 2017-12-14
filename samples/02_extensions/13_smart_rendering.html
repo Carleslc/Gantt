@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Smart Rendering extension</title>
+</head>
+<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<script src="../../codebase/ext/dhtmlxgantt_smart_rendering.js" type="text/javascript" charset="utf-8"></script>
+
+<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+<style type="text/css">
+	html, body{ height:100%; padding:0px; margin:0px; overflow: hidden;}
+
+	.weekend{ background: #f4f7f4 !important;}
+</style>
+<body>
+<div id="gantt_here" style='width:100%; height:100%;'></div>
+<script type="text/javascript">
+
+
+	gantt.attachEvent("onLoadStart", function(){
+		gantt.message("Loading...");
+	});
+	gantt.attachEvent("onLoadEnd", function(){
+		gantt.message({text:"Loaded " + gantt.getTaskCount() + " tasks, " + gantt.getLinkCount() + " links", expire:8*1000});
+	});
+
+	gantt.config.min_column_width = 30;
+	gantt.config.scale_height = 60;
+	gantt.config.date_scale = "%d";
+	gantt.config.subscales = [
+		{unit:"month", step:1, date:"%F, %Y" },
+		{unit:"year", step:1, date:"%Y" }
+	];
+
+
+	gantt.config.row_height = 22;
+
+	gantt.config.static_background = true;
+
+	gantt.init("gantt_here");
+	gantt.load("../common/data_large.json");
+
+</script>
+</body>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Import MS Project file</title>
+</head>
+<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://export.dhtmlx.com/gantt/api.js"></script>
+
+<script src="../common/snippets/dhx_file_dnd.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="../common/snippets/dhx_file_dnd.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+<style type="text/css">
+	html, body {
+		height: 100%;
+		padding: 0;
+		margin: 0;
+		overflow: hidden;
+		font-family: Arial;
+	}
+
+	.mpp-sample{
+		background: url("common/ms-project.png");
+		width: 32px;
+		height: 32px;
+		background-repeat: no-repeat;
+		padding-left: 40px;
+		line-height: 32px;
+		display: inline-block;
+	}
+</style>
+<body>
+<div style="text-align: center; padding: 5px;">
+	<p>
+		You can use any MPP or XML Project file or download this sample <a class="mpp-sample" href="../common/DemoProject.mpp" target="_blank">DemoProject.mpp</a>
+	</p>
+	<p>
+		<form id="mspImport" action="" method="POST" enctype="multipart/form-data">
+			<input type="file" id="mspFile" name="file" accept=".mpp,.xml, text/xml, application/xml, application/vnd.ms-project, application/msproj, application/msproject, application/x-msproject, application/x-ms-project, application/x-dos_ms_project, application/mpp, zz-application/zz-winassoc-mpp"/>
+			<button id="mspImportBtn" type="submit">Load from MPP</button>
+		</form>
+	</p>
+</div>
+<div id="gantt_here" style='width:100%; height:600px;'></div>
+<script type="text/javascript">
+
+
+	gantt.config.row_height = 24;
+	gantt.config.xml_date = "%Y-%m-%d %H:%i";
+
+	gantt.attachEvent("onParse", function(){
+		gantt.eachTask(function(task){
+			if(gantt.hasChild(task.id)){
+				task.type = gantt.config.types.project;
+				gantt.updateTask(task.id);
+			}else if(task.duration === 0){
+				task.type = gantt.config.types.milestone;
+				gantt.updateTask(task.id);
+			}
+		});
+	});
+
+	gantt.message("Upload <b>MPP</b> or <b>XML</b> Project file using 'Choose File' button or simply drag-and-drop it into the page");
+
+	if(!window.FormData){
+		gantt.error("Your browsers does not support Ajax File upload, please open this demo in modern browser");
+	}
+
+	gantt.config.xml_date="%Y-%m-%d %H:%i";
+	gantt.init("gantt_here");
+
+	var fileDnD = fileDragAndDrop();
+	fileDnD.init(gantt.$container);
+
+	function sendFile(file){
+		fileDnD.showUpload();
+		upload(file, function(){
+			fileDnD.hideOverlay();
+		})
+	}
+
+	function upload(file, callback){
+		gantt.importFromMSProject({
+			data: file,
+			callback: function(project){
+				if(project){
+					gantt.clearAll();
+
+					if(project.config.duration_unit){
+						gantt.config.duration_unit = project.config.duration_unit;
+					}
+
+					gantt.parse(project.data);
+				}
+
+				if(callback)
+					callback(project);
+			}
+		});
+	}
+
+	fileDnD.onDrop(sendFile);
+	var form = document.getElementById("mspImport");
+	form.onsubmit = function(event) {
+		event.preventDefault();
+		var fileInput = document.getElementById("mspFile");
+		sendFile(fileInput.files[0]);
+	};
+</script>
+</body>

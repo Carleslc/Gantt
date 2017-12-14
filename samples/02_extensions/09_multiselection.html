@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<head>
+<meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+<title>Multiselection and Indent/Outdent tasks</title>
+<script src='../common/dhtmlxSuite/dhtmlx.js'></script>
+<script src='../../codebase/dhtmlxgantt.js' type='text/javascript' charset='utf-8'></script>
+<script src='../../codebase/ext/dhtmlxgantt_multiselect.js' type='text/javascript' charset='utf-8'></script>
+
+<link rel='stylesheet' type='text/css' href='../common/dhtmlxSuite/skins/skyblue/dhtmlx.css'/>
+<link rel='stylesheet' href='../../codebase/dhtmlxgantt.css' type='text/css' media='screen' title='no title' charset='utf-8'>
+<style type='text/css'>
+	html, body{ padding:0px; margin:0px; height:100%; overflow: hidden;}
+	#gantt_here {
+		height: 100%;
+	}
+
+</style>
+<script type='text/javascript'>
+	var myLayout, myToolbar;
+	function doOnLoad() {
+		myLayout = new dhtmlXLayoutObject({
+			parent: document.body,
+			pattern: '2E'
+		});
+		myLayout.cells('a').fixSize(true, true);
+		myLayout.cells('a').hideHeader();
+		myLayout.cells('a').setHeight(32);
+		myLayout.cells('b').hideHeader();
+
+		myLayout.cells('b').attachObject('gantt_here');
+		initGantt(gantt);
+
+		myToolbar = myLayout.cells('a').attachToolbar();
+		initToolbar(myToolbar);
+	}
+
+	function initGantt(gantt){
+		gantt.message({
+			text:"Hold <b>shift</b> or <b>ctrl</b> to select several items",
+			expire:-1
+		});
+		gantt.config.xml_date = "%d-%m-%Y";
+		gantt.config.lightbox.sections = [
+			{name: "description", height: 70, map_to: "text", type: "textarea", focus: true},
+			{name: "time", type: "duration", map_to: "auto"}
+		];
+		gantt.config.scale_unit = "month";
+		gantt.config.date_scale = "%F, %Y";
+		gantt.config.scale_height = 50;
+		gantt.config.subscales = [
+			{unit: "day", step: 1, date: "%j, %D"}
+		];
+
+		gantt.templates.task_class = gantt.templates.grid_row_class = gantt.templates.task_row_class = function (start, end, task) {
+			if (gantt.isSelectedTask(task.id))
+				return "gantt_selected";
+		};
+
+		gantt.init('gantt_here');
+		gantt.parse({
+			"data":[
+				{"id":11, "text":"Project #1", "start_date":"28-03-2013", "duration":"11"},
+				{"id":1, "text":"Project #2", "start_date":"01-04-2013", "duration":"18"},
+
+				{"id":2, "text":"Task #1", "start_date":"02-04-2013", "duration":"8"},
+				{"id":3, "text":"Task #2", "start_date":"11-04-2013", "duration":"8"},
+				{"id":4, "text":"Task #3", "start_date":"13-04-2013", "duration":"6"},
+				{"id":5, "text":"Task #1.1", "start_date":"02-04-2013", "duration":"7"},
+				{"id":6, "text":"Task #1.2", "start_date":"03-04-2013", "duration":"7"},
+				{"id":7, "text":"Task #2.1", "start_date":"11-04-2013", "duration":"8"},
+				{"id":8, "text":"Task #3.1", "start_date":"14-04-2013", "duration":"5"},
+				{"id":9, "text":"Task #3.2", "start_date":"14-04-2013", "duration":"4"},
+				{"id":10, "text":"Task #3.3", "start_date":"14-04-2013", "duration":"3"},
+
+				{"id":12, "text":"Task #1", "start_date":"03-04-2013", "duration":"5"},
+				{"id":13, "text":"Task #2", "start_date":"02-04-2013", "duration":"7"},
+				{"id":14, "text":"Task #3", "start_date":"02-04-2013", "duration":"6"},
+				{"id":15, "text":"Task #4", "start_date":"02-04-2013", "duration":"5"},
+				{"id":16, "text":"Task #5", "start_date":"02-04-2013", "duration":"7"},
+
+				{"id":17, "text":"Task #2.1", "start_date":"03-04-2013", "duration":"2"},
+				{"id":18, "text":"Task #2.2", "start_date":"06-04-2013", "duration":"3"},
+				{"id":19, "text":"Task #2.3", "start_date":"10-04-2013", "duration":"4"},
+				{"id":20, "text":"Task #2.4", "start_date":"10-04-2013", "duration":"4"},
+				{"id":21, "text":"Task #4.1", "start_date":"03-04-2013", "duration":"4"},
+				{"id":22, "text":"Task #4.2", "start_date":"03-04-2013", "duration":"4"},
+				{"id":23, "text":"Task #4.3", "start_date":"03-04-2013", "duration":"5"}
+			],
+			"links":[]
+		});
+
+	}
+
+	// indent-outdent implementation
+	(function(){
+
+		function shiftTask(task_id, direction) {
+			var task = gantt.getTask(task_id);
+			task.start_date = gantt.date.add(task.start_date, direction, "day");
+			task.end_date = gantt.calculateEndDate(task.start_date, task.duration);
+			gantt.updateTask(task.id);
+		}
+
+		var actions = {
+			"indent": function indent(task_id){
+				var prev_id = gantt.getPrevSibling(task_id);
+				while(gantt.isSelectedTask(prev_id)){
+					var prev = gantt.getPrevSibling(prev_id);
+					if(!prev) break;
+					prev_id = prev;
+				}
+				if (prev_id) {
+					var new_parent = gantt.getTask(prev_id);
+					gantt.moveTask(task_id, gantt.getChildren(new_parent.id).length, new_parent.id);
+					new_parent.type = gantt.config.types.project;
+					new_parent.$open = true;
+					gantt.updateTask(task_id);
+					gantt.updateTask(new_parent.id);
+					return task_id;
+				}
+				return null;
+			},
+			"outdent": function outdent(task_id){
+				var cur_task = gantt.getTask(task_id);
+				var old_parent = cur_task.parent;
+				if (gantt.isTaskExists(old_parent) && old_parent != gantt.config.root_id){
+					gantt.moveTask(task_id, gantt.getTaskIndex(old_parent)+1+gantt.getTaskIndex(task_id), gantt.getParent(cur_task.parent));
+					if (!gantt.hasChild(old_parent))
+						gantt.getTask(old_parent).type = gantt.config.types.task;
+					gantt.updateTask(task_id);
+					gantt.updateTask(old_parent);
+					return task_id;
+				}
+				return null;
+			},
+			"del": function(task_id){
+				gantt.deleteTask(task_id);
+				return task_id;
+			},
+			"moveForward": function(task_id){
+				shiftTask(task_id, 1);
+			},
+			"moveBackward": function(task_id){
+				shiftTask(task_id, -1);
+			}
+		};
+		var cascadeAction = {
+			"indent":true,
+			"outdent":true,
+			"del":true
+		};
+
+		gantt.performAction = function(actionName){
+			var action = actions[actionName];
+			if(!action)
+				return;
+
+			gantt.batchUpdate(function () {
+				var updated = {};
+				gantt.eachSelectedTask(function(task_id){
+
+					if(cascadeAction[actionName]){
+						if(!updated[gantt.getParent(task_id)]){
+							var updated_id = action(task_id);
+							updated[updated_id] = true;
+						}else{
+							updated[task_id] = true;
+						}
+					}else{
+						action(task_id);
+					}
+				});
+			});
+		};
+
+
+	})();
+
+	function initToolbar(toolbar){
+
+		toolbar.addButton("indent", 1, "Indent");
+		toolbar.setItemToolTip("indent", "Indent selected tasks");
+		toolbar.addButton("outdent", 2, "Outdent");
+		toolbar.setItemToolTip("outdent", "Outdent selected tasks");
+		toolbar.addButton("del", 3, "Delete");
+		toolbar.setItemToolTip("del", "Delete selected tasks");
+		toolbar.addButton("moveForward", 4, "Move Forward");
+		toolbar.setItemToolTip("moveForward", "Move selected tasks one day forward");
+		toolbar.addButton("moveBackward", 5, "Move Backward");
+		toolbar.setItemToolTip("moveBackward", "Move selected tasks one day backward");
+
+
+
+		toolbar.attachEvent("onClick", function (id) {
+			gantt.performAction(id)
+		});
+	}
+
+
+</script>
+</head>
+<body onload='doOnLoad();'>
+<div id='gantt_here'></div>
+</body>

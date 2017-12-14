@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Keyboard Navigation - navigate cells</title>
+    <script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../../codebase/ext/dhtmlxgantt_undo.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../codebase/ext/dhtmlxgantt_keyboard_navigation.js" type="text/javascript" charset="UTF-8"></script>
+    <link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+</head>
+<body>
+
+<div id="gantt_here" style='width:90%; height:500px; margin: 0 5%'></div>
+<script type="text/javascript">
+    gantt.message({
+        text: "<p>Keyboard shortcuts:</p>" +
+        "<b>Global</b>" +
+        "<ul>" +
+        "<li><b>Tab</b> - select gantt</li>" +
+        "<li><b>Alt + Up/Down/Left/Right</b> - scroll gantt</li>" +
+        "<li><b>Ctrl + Enter</b> - create new task</li>" +
+        "<li><b>Ctrl + Z</b> - undo</li>" +
+        "<li><b>Ctrl + R</b> - redo</li>" +
+        "</ul>" +
+        "<b>Header Cells</b>" +
+        "<ul>" +
+        "<li><b>Left/Right</b> - navigate over cells</li>" +
+
+        "<li><b>Home/End</b> - navigate to the first/last column</li>" +
+        "<li><b>Down</b> - navigate to task rows</li>" +
+        "<li><b>Space/Enter</b> - click header</li>" +
+        "</ul>" +
+        "<b>Task cells</b>" +
+        "<ul>" +
+        "<li><b>Up/Down/Left/Right</b> - navigate cells</li>" +
+        "<li><b>PageDown/PageUp</b> - navigate to the first/last cell in column</li>" +
+        "<li><b>Home/End</b> - navigate to the first/last cell in row</li>" +
+        "<li><b>Space</b> - select task</li>" +
+        "<li><b>Ctrl + Enter</b> - create new task</li>" +
+        "<li><b>Delete</b> - delete selected task</li>" +
+        "<li><b>Enter</b> - open the lightbox</li>" +
+        "<li><b>Ctrl + Left/Right</b> - expand, collapse tree</li>" +
+        "</ul>",
+        expire: -1
+    });
+    var demo_tasks = {
+        data: [
+            { "id": 1, "text": "Office itinerancy", open:true, type:"project" },
+            { "id": 2, "text": "Office facing", "start_date": "21-07-2014", "duration": "20", "parent": "1" },
+            { "id": 3, "text": "Furniture installation", "start_date": "21-07-2014", "duration": "5", "parent": "1" },
+            { "id": 4, "text": "The employee relocation", "start_date": "28-07-2014", "duration": "15", "parent": "1" },
+            { "id": 5, "text": "Interior office", "start_date": "28-07-2014", "duration": "15", "parent": "1" },
+            { "id": 6, "text": "Air conditioners installation", "start_date": "18-08-2014", "duration": "2", "parent": "1" },
+            { "id": 7, "text": "Workplaces preparation", "start_date": "20-08-2014", "duration": "2", "parent": "1" },
+            { "id": 8, "text": "Preparing workplaces for us", "start_date": "21-07-2014", "duration": "10", "parent": "1" },
+            { "id": 9, "text": "Workplaces importation", "start_date": "22-08-2014", "duration": "1", "parent": "1" },
+            { "id": 10, "text": "Analysis" , open:true, type:"project"},
+            { "id": 11, "text": "Documentation creation", "start_date": "25-08-2014", "duration": "14", "parent": "10" },
+            { "id": 12, "text": "Software design", "start_date": "25-08-2014", "duration": "10", "parent": "10" },
+            { "id": 13, "text": "Interface setup", "start_date": "12-09-2014", "duration": "1", "parent": "10" },
+            { "id": 14, "text": "Development" , open:true, type:"project"},
+            { "id": 15, "text": "Develop System", "start_date": "15-09-2014", "duration": "5", "parent": "14" },
+            { "id": 16, "text": "Integrate System", "start_date": "15-09-2014", "duration": "15", "parent": "14" },
+            { "id": 17, "text": "Test", "start_date": "06-10-2014", "duration": "1", "parent": "14" }
+
+
+        ],
+        links: [
+            { id: "1", source: "3", target: "4", type: "0" },
+            { id: "2", source: "3", target: "5", type: "0" },
+            { id: "3", source: "2", target: "6", type: "0" },
+            { id: "4", source: "4", target: "6", type: "0" },
+            { id: "5", source: "5", target: "6", type: "0" },
+            { id: "6", source: "6", target: "7", type: "0" },
+            { id: "7", source: "7", target: "9", type: "0" },
+            { id: "8", source: "8", target: "9", type: "0" },
+            { id: "9", source: "9", target: "10", type: "0" },
+            { id: "10", source: "9", target: "11", type: "0" },
+            { id: "11", source: "9", target: "12", type: "0" },
+            { id: "12", source: "11", target: "13", type: "0" },
+            { id: "13", source: "12", target: "13", type: "0" },
+            { id: "14", source: "13", target: "14", type: "0" },
+            { id: "15", source: "13", target: "15", type: "0" },
+            { id: "16", source: "15", target: "17", type: "0" },
+            { id: "17", source: "16", target: "17", type: "0" }
+        ]
+    };
+//    gantt.config.show_errors = false;
+    gantt.config.sort = true;
+
+    gantt.config.scale_unit = "day";
+    gantt.config.duration_unit = "day";
+    gantt.config.row_height = 30;
+    gantt.config.min_column_width = 40;
+
+    gantt.config.keyboard_navigation_cells = true;
+    gantt.init("gantt_here");
+
+    gantt.parse(demo_tasks);
+</script>
+</body>

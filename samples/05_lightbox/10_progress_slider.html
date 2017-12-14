@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+	<title>Slider control in lightbox</title>
+	<script src='../common/dhtmlxSuite/dhtmlx.js'></script>
+	<script src='../../codebase/dhtmlxgantt.js' type='text/javascript' charset='utf-8'></script>
+
+	<link rel='stylesheet' type='text/css' href='../common/dhtmlxSuite/skins/terrace/dhtmlx.css'/>
+	<link rel='stylesheet' href='../../codebase/dhtmlxgantt.css' type='text/css' media='screen' title='no title' charset='utf-8'>
+</head>
+<body>
+<style type='text/css'>
+	html, body{ padding:0px; margin:0px; height:100%;}
+	.gantt_slider {
+		width: 530px;
+		height: 20px;
+		margin-left: 10px;
+		display: inline-block;
+	}
+
+	.gantt_slider input{
+		width: 34px;
+		height: 18px;
+		border: none;
+
+	}
+	.gantt_slider div:first-child, .gantt_slider .gantt_slider_value{
+		display: inline-block;
+		vertical-align: middle;
+		line-height: 13px;
+	}
+	.gantt_slider .gantt_slider_value{
+		font-size: 15px;
+		color: black;
+		margin: 5px 10px;
+
+	}
+</style>
+<div id='gantt_here' style="width:100%; height:100%;"></div>
+<script type='text/javascript'>
+
+	gantt.form_blocks["dhx_slider"] = {
+		render: function (sns) {
+			return '<div class="gantt_slider"><div><input type="text" readonly="true"/></div></div>';
+		},
+		set_value: function (node, value, task, data) {
+			if (!node._slider) {
+				node._slider = new dhtmlXSlider({
+					parent: node,
+					size: 270,
+					max: 100,
+					tooltip: true,
+					step: data.step ? data.step : 1,
+					skin: data.skin ? data.skin : ''
+				});
+
+				node._count = document.createElement('div');
+				node._count.className = "gantt_slider_value";
+
+				node.appendChild(node._count);
+				var slider_id = node._slider.attachEvent("onChange", function (newValue, sliderObj) {
+					node._count.innerHTML = newValue + "%";
+				});
+				var id = gantt.attachEvent("onAfterLightbox", function () {
+					node._slider.detachEvent(slider_id);
+					node._slider.unload();
+					node._slider = null;
+					this.detachEvent(id);
+				});
+			}
+			if (task.progress || task.progress == 0) {
+				node._slider.setValue(parseInt(task.progress * 100));
+				node._count.innerHTML = parseInt(task.progress * 100) + "%";
+			}
+		},
+		get_value: function (node, task) {
+			return node._slider ? node._slider.getValue() / 100 : 0;
+		},
+		focus: function (node) {
+		}
+	};
+
+	gantt.config.lightbox.sections = [
+		{name: "description", height: 80, map_to: "text", type: "textarea", focus: true},
+		{name: "progress", type: "dhx_slider", map_to: "progress", step: 5},
+		{name: "time", height: 72, type: "duration", map_to: "auto"}
+	];
+
+	gantt.locale.labels.section_progress = "Progress";
+
+	gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";
+	gantt.init("gantt_here");
+	gantt.attachEvent("onLoadEnd", function(){
+		var first = gantt.getTaskByTime()[0];
+		gantt.showLightbox(first.id);
+	});
+	gantt.load("../common/data.json", "json");
+
+</script>
+</body>

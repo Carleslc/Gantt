@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Today and Status lines in Gantt</title>
+</head>
+<script src="../../codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<script src="../../codebase/ext/dhtmlxgantt_marker.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="../../codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+<script type="text/javascript" src="../common/testdata.js"></script>
+<body>
+<style type="text/css">
+	html, body{ padding:0px; margin:0px; height:100%; }
+
+	.status_line{
+		background-color: #0ca30a;
+	}
+
+</style>
+<div id="gantt_here" style='width:100%; height:100%;'></div>
+<script type="text/javascript">
+
+	var date_to_str = gantt.date.date_to_str(gantt.config.task_date);
+	var today = new Date(2013, 3, 5);
+	gantt.addMarker({
+		start_date: today,
+		css: "today",
+		text: "Today",
+		title:"Today: "+ date_to_str(today)
+	});
+
+	var start = new Date(2013, 2, 28);
+	gantt.addMarker({
+		start_date: start,
+		css: "status_line",
+		text: "Start project",
+		title:"Start project: "+ date_to_str(start)
+	});
+
+
+	gantt.config.scale_unit = "month";
+	gantt.config.date_scale = "%F, %Y";
+
+	gantt.config.scale_height = 50;
+
+	gantt.config.subscales = [
+		{unit:"day", step:1, date:"%j, %D" }
+	];
+
+	gantt.init("gantt_here");
+
+	gantt.parse(demo_tasks);
+	
+
+
+</script>
+</body>
