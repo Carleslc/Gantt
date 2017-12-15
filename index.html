@@ -19,6 +19,7 @@
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+  <script>window.__theme = 'bs4';</script>
 
   <div style='margin:10px;'>
     <div class="row align-items-center">
@@ -51,6 +52,7 @@
         </div>
       </div>
       <div class="col-md-2">
+        <!-- New Tasks Start Date Preference -->
         <div class="form-row align-items-center">
           <div class="col-auto">
             <label class="mr-sm-2" for="preference-selector" style="margin-left: 20px;" data-html="true" title="<i><p>Default behavior of the start date for new tasks.</p></i><p><b>Consecutive</b>: Set at the next day of the last modified task.</p><p><b>Parallel</b>: Align with the last modified task.</p><p>If the last modified task is a project the behavior is always parallel.</p>" data-toggle="tooltip" data-placement="bottom">Preference</label>
@@ -112,8 +114,6 @@
     });
   </script>
 
-  <div id="gantt_here" style='width:100%; height:100%;'></div>
-
   <style type="text/css">
       .milestone {
           margin-top: 1px;
@@ -134,6 +134,8 @@
       }
   </style>
 
+  <div id="gantt_here" style='width:100%; height:100%;'></div>
+
   <!-- Config and load data -->
   <script type="text/javascript">
     gantt.config.wide_form = 1;
@@ -142,7 +144,8 @@
     gantt.config.autoscroll_speed = 50;
     gantt.config.fit_tasks = true;
     gantt.config.scale_unit = "month";
-    gantt.config.scale_height = 54;
+    gantt.config.duration_unit = "day";
+    gantt.config.scale_height = 50;
     gantt.config.date_scale = "%F %Y";
     gantt.config.min_column_width = 50;
     gantt.config.subscales = [
@@ -150,18 +153,29 @@
       {unit:"day", step:1, date:"%D %j" }
     ];
 
+    function isProject(task) {
+      return task.type == gantt.config.types.project || task.$level == 0 || gantt.getChildren(task.id).length > 0;
+    }
+
     gantt.templates.task_class = function(start, end, task) {
       if (task.milestone) return "gantt_milestone"
-      return task.$level == 0 ? "gantt_project" : ""
+      return isProject(task) ? "gantt_project" : ""
     };
 
-    gantt.config.lightbox.sections = [
+    var task_sections = [
       {name: "description", height: 50, map_to: "text", type: "textarea"},
       {name: "time", height: 72, type: "time", map_to: "auto"}
     ];
+    var project_sections = [task_sections[0]]; // no time section (fits children)
+
+    gantt.attachEvent("onBeforeLightbox", function(id) {
+      gantt.resetLightbox();
+      gantt.config.lightbox.sections = isProject(gantt.getTask(id)) ? project_sections : task_sections;
+      return true;
+    });
 
     gantt.locale.labels["milestone"] = "Milestone";
-    gantt.config.buttons_left=["dhx_save_btn","dhx_cancel_btn","milestone"];
+    gantt.config.buttons_left=["dhx_save_btn", "dhx_cancel_btn", "milestone"];
 
     gantt.attachEvent("onLightboxButton", function(button_id, node, e) {
         if (button_id == "milestone") {
@@ -186,13 +200,35 @@
     });
 
     gantt.attachEvent("onBeforeTaskChanged", function(id, mode, task) {
-      return !task.milestone || mode != 'resize';
+      return mode != 'resize' || (!task.milestone && !isProject(task));
     });
 
-    Date.prototype.plusDays = function(days) {
-      var new_date = new Date(this);
-      new_date.setHours(new_date.getHours() + 24*days);
-      return new_date;
+    function plus(date, duration) {
+      return gantt.calculateEndDate(date, duration, gantt.config.duration_unit);
+    }
+
+    function limitDuration(task) {
+      var start_plus_one_day = plus(task.start_date, 1);
+      if (task.end_date - start_plus_one_day < 0) { // At least 1 day of duration
+        task.end_date = start_plus_one_day;
+        gantt.updateTask(task.id);
+      }
+      if (task.milestone && task.start_date != task.end_date) {
+        task.end_date = task.start_date;
+        gantt.updateTask(task.id);
+      }
+    }
+
+    function fitProject(task) {
+      var parent = task.parent ? gantt.getTask(task.parent) : task;
+      var children = gantt.getChildren(parent.id).map(child_id => gantt.getTask(child_id));
+      if (children.length > 0) {
+        var min_child = children.reduce((a, b) => a.start_date < b.start_date ? a : b);
+        var max_child = children.reduce((a, b) => a.end_date > b.end_date ? a : b);
+        parent.start_date = min_child.start_date;
+        parent.end_date = max_child.end_date;
+        gantt.updateTask(parent.id);
+      }
     }
 
     var last_end_date = null, last_start_date = null;
@@ -200,32 +236,10 @@
     gantt.attachEvent("onAfterTaskUpdate", function(id, task) {
       if (updating_ids.has(id)) return;
       updating_ids.add(id);
-      var start_plus_one_day = task.start_date.plusDays(1);
-      if (task.end_date - start_plus_one_day < 0) { // At least 1 day of duration
-        task.end_date = start_plus_one_day;
-        gantt.updateTask(id);
-      }
-      if (task.milestone && task.start_date != task.end_date) {
-        task.end_date = task.start_date;
-        gantt.updateTask(id);
-      }
-      var parent = task.parent ? gantt.getTask(task.parent) : task;
-      var children = gantt.getChildren(parent.id).map(function(child_id) {
-        return gantt.getTask(child_id);
-      });
-      if (children.length > 0) {
-        var min_child = children.reduce(function(a, b) {
-          return a.start_date < b.start_date ? a : b;
-        });
-        var max_child = children.reduce(function(a, b) {
-          return a.end_date > b.end_date ? a : b;
-        });
-        parent.start_date = min_child.start_date;
-        parent.end_date = max_child.end_date;
-        gantt.updateTask(parent.id);
-      }
+      limitDuration(task);
+      fitProject(task);
       last_start_date = task.start_date;
-      last_end_date = task.type == gantt.config.types.project ? task.start_date : task.end_date;
+      last_end_date = isProject(task) ? task.start_date : task.end_date;
       updating_ids.delete(id);
     });
 
@@ -245,7 +259,7 @@
     gantt.attachEvent("onTaskCreated", function(task) {
       if (last_end_date) {
         task.start_date = preference == 'consecutive' ? last_end_date : last_start_date;
-        task.end_date = task.start_date.plusDays(task.duration);
+        task.end_date = plus(task.start_date, task.duration);
       }
       if (!task.parent) {
         task.text = 'New project';
@@ -261,7 +275,7 @@
     gantt.attachEvent("onTaskDrag", function(id, mode, task, original) {
         if (mode == gantt.config.drag_mode.move) {
             var diff = task.start_date - original.start_date;
-            gantt.eachTask(function(child){
+            gantt.eachTask(function(child) {
                 child.start_date = new Date(+child.start_date + diff);
                 child.end_date = new Date(+child.end_date + diff);
                 gantt.refreshTask(child.id, true);
@@ -271,14 +285,13 @@
     gantt.attachEvent("onAfterTaskDrag", function(id, mode, e) {
         if (mode == gantt.config.drag_mode.move) {
             var state = gantt.getState();
-            gantt.eachTask(function(child){          
+            gantt.eachTask(function(child) {          
                 child.start_date = gantt.roundDate({
                     date:child.start_date, 
                     unit:state.scale_unit, 
                     step:state.scale_step
                 });         
-                child.end_date = gantt.calculateEndDate(child.start_date, 
-                    child.duration, gantt.config.duration_unit);
+                child.end_date = gantt.calculateEndDate(child.start_date, child.duration, gantt.config.duration_unit);
                 gantt.updateTask(child.id);
             }, id);
         }
@@ -286,6 +299,5 @@
 
     gantt.init("gantt_here");
   </script>
-  <script>window.__theme = 'bs4';</script>
 </body>
 </html>
