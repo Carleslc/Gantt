@@ -10,6 +10,7 @@
   <script src="https://export.dhtmlx.com/gantt/api.js"></script>
   <link id="skin" rel="stylesheet" href="codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
   <script src="codebase/ext/dhtmlxgantt_multiselect.js"></script>
+  <script src="codebase/ext/dhtmlxgantt_marker.js" type="text/javascript" charset="utf-8"></script>
 </head>
 
 <body>
@@ -237,11 +238,11 @@
 
     function render() {
       gantt.resetSkin();
-      configParams();
+      configSetup();
       gantt.render();
     }
 
-    function configParams() {
+    function configSetup() {
       gantt.config.wide_form = 1;
       gantt.config.order_branch = true;
       gantt.config.autoscroll = true;
@@ -256,9 +257,18 @@
       gantt.locale.labels["milestone"] = "Milestone";
       gantt.config.buttons_left = ["dhx_save_btn", "dhx_cancel_btn", "milestone"];
       gantt.config.buttons_right = ["dhx_delete_btn"];
+
+      var date_to_str = gantt.date.date_to_str(gantt.config.task_date);
+      var today = new Date();
+      gantt.addMarker({
+        start_date: today,
+        css: "today",
+        text: "Today",
+        title:"Today: " + date_to_str(today)
+      });
     }
 
-    configParams();
+    configSetup();
 
     function isProject(task) {
       return gantt.hasChild(task.id);
