@@ -476,6 +476,7 @@
         gantt.updateTask(new_parent.id);
         return id;
       }
+      fitProject(gantt.getTask(id));
       return null;
     }
 
@@ -490,6 +491,7 @@
         gantt.updateTask(old_parent);
         return id;
       }
+      fitProject(gantt.getTask(id));
       return null;
     }
 
