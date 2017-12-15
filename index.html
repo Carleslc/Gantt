@@ -141,7 +141,7 @@
     gantt.config.wide_form = 1;
     gantt.config.order_branch = true;
     gantt.config.autoscroll = true;
-    gantt.config.autoscroll_speed = 50;
+    gantt.config.autoscroll_speed = 10;
     gantt.config.fit_tasks = true;
     gantt.config.scale_unit = "month";
     gantt.config.duration_unit = "day";
@@ -166,7 +166,10 @@
       {name: "description", height: 50, map_to: "text", type: "textarea"},
       {name: "time", height: 72, type: "time", map_to: "auto"}
     ];
-    var project_sections = [task_sections[0]]; // no time section (fits children)
+    var project_sections = [
+      {name: "description", height: 50, map_to: "text", type: "textarea"},
+      {name: "time", height: 72, type: "time", map_to: "auto", readonly: true}
+    ];
 
     gantt.attachEvent("onBeforeLightbox", function(id) {
       gantt.resetLightbox();
@@ -273,28 +276,30 @@
 
     // Move child tasks along with the parent
     gantt.attachEvent("onTaskDrag", function(id, mode, task, original) {
-        if (mode == gantt.config.drag_mode.move) {
-            var diff = task.start_date - original.start_date;
-            gantt.eachTask(function(child) {
-                child.start_date = new Date(+child.start_date + diff);
-                child.end_date = new Date(+child.end_date + diff);
-                gantt.refreshTask(child.id, true);
-            }, id);
-        }
+      if (mode == gantt.config.drag_mode.resize || mode == gantt.config.drag_mode.move) {
+        var diff = task.start_date - original.start_date;
+        gantt.eachTask(function(child) {
+          child.start_date = new Date(+child.start_date + diff);
+          child.end_date = new Date(+child.end_date + diff);
+          gantt.refreshTask(child.id, true);
+        }, id);
+        fitProject(task);
+      }
     });
+
     gantt.attachEvent("onAfterTaskDrag", function(id, mode, e) {
-        if (mode == gantt.config.drag_mode.move) {
-            var state = gantt.getState();
-            gantt.eachTask(function(child) {          
-                child.start_date = gantt.roundDate({
-                    date:child.start_date, 
-                    unit:state.scale_unit, 
-                    step:state.scale_step
-                });         
-                child.end_date = gantt.calculateEndDate(child.start_date, child.duration, gantt.config.duration_unit);
-                gantt.updateTask(child.id);
-            }, id);
-        }
+      if (mode == gantt.config.drag_mode.resize || mode == gantt.config.drag_mode.move) {
+        var state = gantt.getState();
+        gantt.eachTask(function(child) {
+          child.start_date = gantt.roundDate({
+            date:child.start_date,
+            unit:state.scale_unit,
+            step:state.scale_step
+          });
+          child.end_date = gantt.calculateEndDate(child.start_date, child.duration, gantt.config.duration_unit);
+          gantt.updateTask(child.id);
+        }, id);
+      }
     });
 
     gantt.init("gantt_here");
