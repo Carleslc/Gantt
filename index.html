@@ -81,12 +81,17 @@
           </div>
         </div>
       </div>
-      <div class="col-md-2">
+      <div class="col-auto">
         <button id="indent" class="btn btn-outline-secondary">Indent</button>
         <button id="outdent" class="btn btn-outline-secondary">Outdent</button>
       </div>
-      <div class="col-md-3">
-        <!-- Separator -->
+      <div class="col-auto">
+        <label class="mr-sm-2" for="zoom-selector">Zoom</label>
+        <select class="custom-select mb-2 mr-sm-2 mb-sm-0" id="zoom-selector">
+          <option value="weekly" selected>Semanal</option>
+          <option value="monthly">Mensual</option>
+          <option value="yearly">Anual</option>
+        </select>
       </div>
     </div>
   </div>
@@ -144,7 +149,6 @@
     height: 100%;
     padding: 0px;
     margin: 0px;
-    overflow: hidden;
   }
 
   .row {
@@ -201,21 +205,54 @@
   });
 
   (function config() {
+    var zooms = {
+      weekly: {
+        scale_unit: "month",
+        date_scale: "%F %Y",
+        subscales: [
+          { unit: "day", step: 1, date: "%D %j" }
+        ]
+      },
+      monthly: {
+        scale_unit: "month",
+        date_scale: "%F %Y",
+        subscales: [
+          { unit: "day", step: 7, date: "Week %W" }
+        ]
+      },
+      yearly: {
+        scale_unit: "year",
+        date_scale: "%Y",
+        subscales: [
+          { unit: "month", step: 1, date: "%F" }
+        ]
+      }
+    };
+
+    var zoom = zooms['weekly'];
+    $('#zoom-selector').on('click', function() {
+      zoom = zooms[$(this).val()];
+      render();
+    });
+
+    function render() {
+      gantt.resetSkin();
+      configParams();
+      gantt.render();
+    }
+
     function configParams() {
       gantt.config.wide_form = 1;
       gantt.config.order_branch = true;
       gantt.config.autoscroll = true;
-      gantt.config.autoscroll_speed = 10;
+      gantt.config.autoscroll_speed = 100;
       gantt.config.fit_tasks = true;
-      gantt.config.scale_unit = "month";
+      gantt.config.scale_unit = zoom.scale_unit;
       gantt.config.duration_unit = "day";
       gantt.config.scale_height = 50;
       gantt.config.min_column_width = 50;
-      gantt.config.date_scale = "%F %Y";
-      gantt.config.subscales = [
-        //{unit:"hour", step:3, date:"%H:%i"},
-        { unit: "day", step: 1, date: "%D %j" }
-      ];
+      gantt.config.date_scale = zoom.date_scale;
+      gantt.config.subscales = zoom.subscales;
       gantt.locale.labels["milestone"] = "Milestone";
       gantt.config.buttons_left = ["dhx_save_btn", "dhx_cancel_btn", "milestone"];
       gantt.config.buttons_right = ["dhx_delete_btn"];
@@ -235,13 +272,7 @@
 
     function changeSkin(name) {
       var link = document.createElement("link");
-
-      link.onload = function() {
-        gantt.resetSkin();
-        configParams();
-        gantt.render();
-      };
-
+      link.onload = render;
       link.rel = "stylesheet";
       link.type = "text/css";
       link.id = "skin";
