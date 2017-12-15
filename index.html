@@ -1,29 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta http-equiv="Content-type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>Gantt Online</title>
-
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
-
   <script src="codebase/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
   <script src="https://export.dhtmlx.com/gantt/api.js"></script>
-
-  <link rel="stylesheet" href="codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
-  <style type="text/css">
-    html, body { height:100%; padding:0px; margin:0px; overflow: hidden; }
-  </style>
+  <link id="skin" rel="stylesheet" href="codebase/dhtmlxgantt.css" type="text/css" media="screen" title="no title" charset="utf-8">
+  <script src="codebase/ext/dhtmlxgantt_multiselect.js"></script>
 </head>
+
 <body>
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
-  <script>window.__theme = 'bs4';</script>
-
-  <div style='margin:10px;'>
+  <script>
+  window.__theme = 'bs4';
+  </script>
+  <div>
     <div class="row align-items-center">
-      <div class="col-md-4">
+      <div class="col-auto">
         <!-- Load data -->
         <div class="row align-items-center">
           <a class="mr-sm-2" style="margin-left: 40px">Load</a>
@@ -33,17 +31,35 @@
           </label>
         </div>
       </div>
-      <div class="col-md-2">
+      <div class="col-md-4">
+        <!-- Save data -->
         <button id="save" class="btn btn-primary">Save</button>
         <a download="gantt.json" id="download_json" class="btn btn-success" style="margin-left: 20px; display: none">Download</a>
       </div>
-      <div class="col-md-3">
+      <div class="col-auto">
+        <!-- Style -->
+        <div class="form-row align-items-center">
+          <div class="col-auto">
+            <label class="mr-sm-2" for="style-selector">Style</label>
+            <select class="custom-select mb-2 mr-sm-2 mb-sm-0" id="style-selector">
+              <option value="terrace" selected>Terrace</option>
+              <option value="material">Material</option>
+              <option value="skyblue">Skyblue</option>
+              <option value="meadow">Meadow</option>
+              <option value="broadway">Broadway</option>
+              <option value="contrast_white">High contrast light</option>
+              <option value="contrast_black">High contrast dark</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
         <!-- Export data -->
-        <div class="btn-group" style='width:100%'>
+        <div class="btn-group" style="width:100%;">
           <button type="button" class="btn btn-primary btn-block dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Export
           </button>
-          <div class="dropdown-menu" style='width:100%'>
+          <div class="dropdown-menu" style="width:100%;">
             <a class="dropdown-item" href="#" onclick='gantt.exportToPNG()'>Export to PNG</a>
             <a class="dropdown-item" href="#" onclick='gantt.exportToPDF()'>Export to PDF</a>
             <a class="dropdown-item" href="#" onclick='gantt.exportToExcel()'>Export to Excel</a>
@@ -51,7 +67,9 @@
           </div>
         </div>
       </div>
-      <div class="col-md-2">
+    </div>
+    <div class="row align-items-center">
+      <div class="col-auto">
         <!-- New Tasks Start Date Preference -->
         <div class="form-row align-items-center">
           <div class="col-auto">
@@ -63,112 +81,229 @@
           </div>
         </div>
       </div>
+      <div class="col-md-2">
+        <button id="indent" class="btn btn-outline-secondary">Indent</button>
+        <button id="outdent" class="btn btn-outline-secondary">Outdent</button>
+      </div>
+      <div class="col-md-3">
+        <!-- Separator -->
+      </div>
     </div>
   </div>
-  <script type="text/javascript">$('[data-toggle="tooltip"]').tooltip();</script>
-
+  <script type="text/javascript">
+  $('[data-toggle="tooltip"]').tooltip();
+  </script>
   <script>
-    // Save
-    var textFile = null;
-    makeTextFile = function(text) {
-      var data = new Blob([text], {type: 'text/json'});
+  // Save
+  var textFile = null;
+  makeTextFile = function(text) {
+    var data = new Blob([text], { type: 'text/json' });
 
-      // If we are replacing a previously generated file we need to
-      // manually revoke the object URL to avoid memory leaks.
-      if (textFile !== null) {
-        window.URL.revokeObjectURL(textFile);
-      }
-
-      textFile = window.URL.createObjectURL(data);
-
-      return textFile;
-    };
-
-    document.getElementById('save').addEventListener('click', function() {
-      var save_data = JSON.stringify(gantt.serialize());
-      var link = document.getElementById('download_json');
-      link.href = makeTextFile(save_data);
-      link.style.display = 'inline';
-    }, false);
-
-    // Load
-    loadData = function(file) {
-      var loaded_filename = file.name.split('.')[0] + '.json';
-      var link = document.getElementById('download_json');
-      link.download = loaded_filename;
-      var reader = new FileReader();
-      reader.onload = function(event) {
-        try {
-          loaded_data = JSON.parse(event.target.result);
-          gantt.parse(loaded_data);
-        }
-        catch (err) {
-          gantt.message({type: "error", text: 'Cannot load ' + file.name});
-        }
-      }
-      reader.readAsText(file); // when the file is read it triggers the onload event above
+    // If we are replacing a previously generated file we need to
+    // manually revoke the object URL to avoid memory leaks.
+    if (textFile !== null) {
+      window.URL.revokeObjectURL(textFile);
     }
 
-    $("#load_file").change(function() {
-      loadData(this.files[0]);
-    });
+    textFile = window.URL.createObjectURL(data);
+
+    return textFile;
+  };
+
+  document.getElementById('save').addEventListener('click', function() {
+    var save_data = JSON.stringify(gantt.serialize());
+    var link = document.getElementById('download_json');
+    link.href = makeTextFile(save_data);
+    link.style.display = 'inline';
+  }, false);
+
+  // Load
+  loadData = function(file) {
+    var loaded_filename = file.name.split('.')[0] + '.json';
+    var link = document.getElementById('download_json');
+    link.download = loaded_filename;
+    var reader = new FileReader();
+    reader.onload = function(event) {
+      try {
+        loaded_data = JSON.parse(event.target.result);
+        gantt.parse(loaded_data);
+      } catch (err) {
+        gantt.message({ type: "error", text: 'Cannot load ' + file.name });
+      }
+    }
+    reader.readAsText(file); // when the file is read it triggers the onload event above
+  }
+
+  $("#load_file").change(function() {
+    loadData(this.files[0]);
+  });
   </script>
-
   <style type="text/css">
-      .milestone {
-          margin-top: 1px;
-          width: 5px;
-      }
-      .gantt_milestone {
-        padding-right: 30px;
-      }
-      .gantt_btn_set.milestone_set {
-        text-shadow: 0 -1px 0 #6F6F6F;
-        background: mediumvioletred;
-        text-shadow: 0 -1px 0 #aa6600;
-        color: #fff;
-      }
-      .dropdown-menu > a {
-        text-align: center;
-        display: block;
-      }
+  html,
+  body {
+    height: 100%;
+    padding: 0px;
+    margin: 0px;
+    overflow: hidden;
+  }
+
+  .row {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .milestone {
+    margin-top: 1px;
+    width: 5px;
+  }
+
+  .gantt_milestone {
+    padding-right: 30px;
+  }
+
+  .gantt_btn_set.milestone_set {
+    text-shadow: 0 -1px 0 #6F6F6F;
+    background: mediumvioletred;
+    text-shadow: 0 -1px 0 #aa6600;
+    color: #fff;
+  }
+
+  .gantt_task_line.project-collapsed {
+    height: 4px;
+    opacity: 0.25;
+  }
+
+  .dropdown-menu>a {
+    text-align: center;
+    display: block;
+  }
+
+  .weekend {
+    background: #f4f7f4;
+  }
+
+  .gantt_selected .weekend {
+    background: #f7eb91;
+  }
+
+  .dhtmlx_message_area {
+    left: 50%;
+    margin-top: 10px;
+    margin-left: -125px;
+  }
   </style>
-
   <div id="gantt_here" style='width:100%; height:100%;'></div>
-
   <!-- Config and load data -->
   <script type="text/javascript">
-    gantt.config.wide_form = 1;
-    gantt.config.order_branch = true;
-    gantt.config.autoscroll = true;
-    gantt.config.autoscroll_speed = 10;
-    gantt.config.fit_tasks = true;
-    gantt.config.scale_unit = "month";
-    gantt.config.duration_unit = "day";
-    gantt.config.scale_height = 50;
-    gantt.config.date_scale = "%F %Y";
-    gantt.config.min_column_width = 50;
-    gantt.config.subscales = [
-      //{unit:"hour", step:3, date:"%H:%i"},
-      {unit:"day", step:1, date:"%D %j" }
-    ];
+  gantt.message({
+    text: "Hold <b>shift</b> to select several tasks",
+    expire: -1 // milliseconds
+  });
+
+  (function config() {
+    function configParams() {
+      gantt.config.wide_form = 1;
+      gantt.config.order_branch = true;
+      gantt.config.autoscroll = true;
+      gantt.config.autoscroll_speed = 10;
+      gantt.config.fit_tasks = true;
+      gantt.config.scale_unit = "month";
+      gantt.config.duration_unit = "day";
+      gantt.config.scale_height = 50;
+      gantt.config.min_column_width = 50;
+      gantt.config.date_scale = "%F %Y";
+      gantt.config.subscales = [
+        //{unit:"hour", step:3, date:"%H:%i"},
+        { unit: "day", step: 1, date: "%D %j" }
+      ];
+      gantt.locale.labels["milestone"] = "Milestone";
+      gantt.config.buttons_left = ["dhx_save_btn", "dhx_cancel_btn", "milestone"];
+      gantt.config.buttons_right = ["dhx_delete_btn"];
+    }
+
+    configParams();
 
     function isProject(task) {
-      return task.type == gantt.config.types.project || task.$level == 0 || gantt.getChildren(task.id).length > 0;
+      return gantt.hasChild(task.id);
+    }
+
+    function isTask(task) {
+      return !task.milestone && !isProject(task);
+    }
+
+    $('#style-selector').on('click', function() { changeSkin($(this).val()); });
+
+    function changeSkin(name) {
+      var link = document.createElement("link");
+
+      link.onload = function() {
+        gantt.resetSkin();
+        configParams();
+        gantt.render();
+      };
+
+      link.rel = "stylesheet";
+      link.type = "text/css";
+      link.id = "skin";
+      link.href = "codebase/skins/dhtmlxgantt_" + name + ".css";
+      document.head.replaceChild(link, document.querySelector("#skin"));
+    }
+
+    gantt.templates.grid_row_class = function(start, end, task) {
+      if (gantt.isSelectedTask(task.id)) {
+        return "gantt_selected";
+      }
     }
 
     gantt.templates.task_class = function(start, end, task) {
-      if (task.milestone) return "gantt_milestone"
-      return isProject(task) ? "gantt_project" : ""
+      classes = []
+      if (task.milestone) {
+        classes.push("gantt_milestone");
+      } else if (isProject(task)) {
+        classes.push("gantt_project");
+        if (!task.$open) {
+          classes.push("project-collapsed");
+        }
+      }
+      if (gantt.isSelectedTask(task.id)) {
+        classes.push("gantt_selected");
+      }
+      return classes.join(" ");
+    };
+
+    Date.prototype.isWeekend = function() {
+      return this.getDay() == 0 || this.getDay() == 6;
+    }
+
+    gantt.templates.scale_cell_class = function(date) {
+      if (date.isWeekend()) {
+        return "weekend";
+      }
+    };
+
+    gantt.templates.task_cell_class = function(task, date) {
+      if (date.isWeekend()) {
+        return "weekend"
+      }
+    };
+
+    gantt.templates.task_row_class = function(start, end, task) {
+      if (gantt.isSelectedTask(task.id)) {
+        return "gantt_selected";
+      }
+    }
+
+    gantt.templates.rightside_text = function(start, end, task) {
+      return task.milestone ? task.text : "";
     };
 
     var task_sections = [
-      {name: "description", height: 50, map_to: "text", type: "textarea"},
-      {name: "time", height: 72, type: "time", map_to: "auto"}
+      { name: "description", height: 50, map_to: "text", type: "textarea" },
+      { name: "time", height: 72, type: "time", map_to: "auto" }
     ];
     var project_sections = [
-      {name: "description", height: 50, map_to: "text", type: "textarea"},
-      {name: "time", height: 72, type: "time", map_to: "auto", readonly: true}
+      { name: "description", height: 50, map_to: "text", type: "textarea" },
+      { name: "time", height: 72, type: "time", map_to: "auto", readonly: true }
     ];
 
     gantt.attachEvent("onBeforeLightbox", function(id) {
@@ -177,33 +312,50 @@
       return true;
     });
 
-    gantt.locale.labels["milestone"] = "Milestone";
-    gantt.config.buttons_left=["dhx_save_btn", "dhx_cancel_btn", "milestone"];
+    function milestoneError() {
+      gantt.message({
+        type: "error",
+        text: "Milestone cannot have child tasks",
+        expire: 3000 // milliseconds
+      });
+    }
+
+    function setMilestone() {
+      var success = true;
+      var id = gantt.getState().lightbox;
+      var task = gantt.getTask(id);
+      if (task.milestone) {
+        task.end_date = task.cached_end;
+        task.type = task.cached_type;
+        delete task.cached_type;
+        delete task.cached_end;
+        delete task.milestone;
+      } else {
+        if (isProject(task)) {
+          milestoneError();
+          success = false;
+        } else {
+          task.milestone = true;
+          task.cached_type = task.type;
+          task.type = gantt.config.types.milestone;
+          task.cached_end = task.end_date;
+          task.end_date = task.start_date;
+        }
+      }
+      if (success) {
+        gantt.updateTask(id);
+        gantt.hideLightbox();
+      }
+    }
 
     gantt.attachEvent("onLightboxButton", function(button_id, node, e) {
-        if (button_id == "milestone") {
-            var id = gantt.getState().lightbox;
-            var task = gantt.getTask(id);
-            if (task.milestone) {
-              task.end_date = task.cached_end;
-              task.type = task.cached_type;
-              delete task.cached_type;
-              delete task.cached_end;
-              delete task.milestone;
-            } else {
-              task.milestone = true;
-              task.cached_type = task.type;
-              task.type = gantt.config.types.milestone;
-              task.cached_end = task.end_date;
-              task.end_date = task.start_date;
-            }
-            gantt.updateTask(id);
-            gantt.hideLightbox();
-        }
+      if (button_id == "milestone") {
+        setMilestone();
+      }
     });
 
     gantt.attachEvent("onBeforeTaskChanged", function(id, mode, task) {
-      return mode != 'resize' || (!task.milestone && !isProject(task));
+      return mode != 'resize' || isTask(task);
     });
 
     function plus(date, duration) {
@@ -234,7 +386,9 @@
       }
     }
 
-    var last_end_date = null, last_start_date = null;
+    var last_end_date = null;
+    var last_start_date = null;
+
     var updating_ids = new Set();
     gantt.attachEvent("onAfterTaskUpdate", function(id, task) {
       if (updating_ids.has(id)) return;
@@ -254,35 +408,78 @@
       gantt.updateTask(id);
     });
 
-    var preference = $('#preference-selector').val();
-    $('#preference-selector').on('click', function() {
-      preference = $(this).val();
+    gantt.attachEvent("onAfterTaskDelete", function(id, task) {
+      fitProject(task);
     });
 
+    var preference = $('#preference-selector').val();
+    $('#preference-selector').on('click', function() { preference = $(this).val(); });
+
     gantt.attachEvent("onTaskCreated", function(task) {
+      if (task.parent && gantt.getTask(task.parent).milestone) {
+        milestoneError();
+        return false;
+      }
       if (last_end_date) {
         task.start_date = preference == 'consecutive' ? last_end_date : last_start_date;
         task.end_date = plus(task.start_date, task.duration);
       }
-      if (!task.parent) {
-        task.text = 'New project';
-      }
       return true;
     });
 
-    gantt.templates.rightside_text = function(start, end, task) {
-      return task.milestone ? task.text : "";
-    };
+    function indent(id) {
+      var prev_id = gantt.getPrevSibling(id);
+      while (gantt.isSelectedTask(prev_id)) {
+        var prev = gantt.getPrevSibling(prev_id);
+        if (!prev) break;
+        prev_id = prev;
+      }
+      if (prev_id) {
+        var new_parent = gantt.getTask(prev_id);
+        gantt.moveTask(id, gantt.getChildren(new_parent.id).length, new_parent.id);
+        new_parent.type = gantt.config.types.project;
+        new_parent.$open = true;
+        gantt.updateTask(id);
+        gantt.updateTask(new_parent.id);
+        return id;
+      }
+      return null;
+    }
 
-    // Move child tasks along with the parent
+    function outdent(id) {
+      var cur_task = gantt.getTask(id);
+      var old_parent = cur_task.parent;
+      if (gantt.isTaskExists(old_parent) && old_parent != gantt.config.root_id) {
+        gantt.moveTask(id, gantt.getTaskIndex(old_parent) + 1 + gantt.getTaskIndex(id), gantt.getParent(cur_task.parent));
+        if (!gantt.hasChild(old_parent))
+          gantt.getTask(old_parent).type = gantt.config.types.task;
+        gantt.updateTask(id);
+        gantt.updateTask(old_parent);
+        return id;
+      }
+      return null;
+    }
+
+    $('#indent').on('click', function() { gantt.eachSelectedTask(indent); });
+    $('#outdent').on('click', function() { gantt.eachSelectedTask(outdent); });
+
+    gantt.attachEvent("onBeforeTaskDrag", function(id, mode, e) {
+      return mode != gantt.config.drag_mode.resize || isTask(gantt.getTask(id));
+    });
+
+    function moveChildTasks(task, original) {
+      var diff = task.start_date - original.start_date;
+      gantt.eachTask(function(child) {
+        child.start_date = new Date(+child.start_date + diff);
+        child.end_date = new Date(+child.end_date + diff);
+        gantt.refreshTask(child.id, true);
+      }, task.id);
+    }
+
+    // Move child tasks along with the parent and fit project size to child tasks
     gantt.attachEvent("onTaskDrag", function(id, mode, task, original) {
       if (mode == gantt.config.drag_mode.resize || mode == gantt.config.drag_mode.move) {
-        var diff = task.start_date - original.start_date;
-        gantt.eachTask(function(child) {
-          child.start_date = new Date(+child.start_date + diff);
-          child.end_date = new Date(+child.end_date + diff);
-          gantt.refreshTask(child.id, true);
-        }, id);
+        moveChildTasks(task, original);
         fitProject(task);
       }
     });
@@ -292,17 +489,18 @@
         var state = gantt.getState();
         gantt.eachTask(function(child) {
           child.start_date = gantt.roundDate({
-            date:child.start_date,
-            unit:state.scale_unit,
-            step:state.scale_step
+            date: child.start_date,
+            unit: state.scale_unit,
+            step: state.scale_step
           });
           child.end_date = gantt.calculateEndDate(child.start_date, child.duration, gantt.config.duration_unit);
           gantt.updateTask(child.id);
         }, id);
       }
     });
-
     gantt.init("gantt_here");
+  })();
   </script>
 </body>
+
 </html>
