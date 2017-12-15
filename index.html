@@ -395,8 +395,10 @@
       updating_ids.add(id);
       limitDuration(task);
       fitProject(task);
-      last_start_date = task.start_date;
-      last_end_date = isProject(task) ? task.start_date : task.end_date;
+      if (!isProject(task)) {
+        last_start_date = task.start_date;
+        last_end_date = isProject(task) ? task.start_date : task.end_date;
+      }
       updating_ids.delete(id);
     });
 
