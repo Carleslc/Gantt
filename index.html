@@ -82,10 +82,12 @@
           </div>
         </div>
       </div>
+      <!-- Indentation -->
       <div class="col-auto">
         <button id="indent" class="btn btn-outline-secondary">Indent</button>
         <button id="outdent" class="btn btn-outline-secondary">Outdent</button>
       </div>
+      <!-- Zoom -->
       <div class="col-auto">
         <label class="mr-sm-2" for="zoom-selector">Zoom</label>
         <select class="custom-select mb-2 mr-sm-2 mb-sm-0" id="zoom-selector">
@@ -93,6 +95,20 @@
           <option value="monthly">Monthly</option>
           <option value="yearly">Yearly</option>
         </select>
+      </div>
+      <!-- Title expansion -->
+      <div class="col-auto">
+        <input type="checkbox" value="" id="task-title-expansion">
+        <label class="form-check-label" for="task-title-expansion">Expand Task Titles</label>
+      </div>
+      <div class="col-auto">
+        <input type="checkbox" value="" id="project-title-expansion">
+        <label class="form-check-label" for="project-title-expansion">Expand Project Titles</label>
+      </div>
+      <!-- Today marker -->
+      <div class="col-auto">
+        <input type="checkbox" value="" id="today-marker" checked>
+        <label class="form-check-label" for="today-marker">Show Today</label>
       </div>
     </div>
   </div>
@@ -196,6 +212,10 @@
     margin-top: 10px;
     margin-left: -125px;
   }
+
+  .form-check-label {
+    padding-left: 0.5em;
+  }
   </style>
   <div id="gantt_here" style='width:100%; height:100%;'></div>
   <!-- Config and load data -->
@@ -242,6 +262,22 @@
       gantt.render();
     }
 
+    var todayMarker;
+    function addTodayMarker() {
+      var date_to_str = gantt.date.date_to_str(gantt.config.task_date);
+      var today = new Date();
+      todayMarker = gantt.addMarker({
+        start_date: today,
+        css: "today",
+        text: "Today",
+        title:"Today: " + date_to_str(today)
+      });
+    }
+
+    function removeTodayMarker() {
+      gantt.deleteMarker(todayMarker);
+    }
+
     function configSetup() {
       gantt.config.wide_form = 1;
       gantt.config.order_branch = true;
@@ -257,15 +293,7 @@
       gantt.locale.labels["milestone"] = "Milestone";
       gantt.config.buttons_left = ["dhx_save_btn", "dhx_cancel_btn", "milestone"];
       gantt.config.buttons_right = ["dhx_delete_btn"];
-
-      var date_to_str = gantt.date.date_to_str(gantt.config.task_date);
-      var today = new Date();
-      gantt.addMarker({
-        start_date: today,
-        css: "today",
-        text: "Today",
-        title:"Today: " + date_to_str(today)
-      });
+      addTodayMarker();
     }
 
     configSetup();
@@ -276,6 +304,14 @@
 
     function isTask(task) {
       return !task.milestone && !isProject(task);
+    }
+
+    function updateTask(id) {
+      gantt.updateTask(id);
+    }
+
+    function updateSelectedTasks() {
+      gantt.eachSelectedTask(updateTask);
     }
 
     $('#style-selector').on('click', function() { changeSkin($(this).val()); });
@@ -335,7 +371,10 @@
     }
 
     gantt.templates.rightside_text = function(start, end, task) {
-      return task.milestone ? task.text : "";
+      return task.milestone
+        || (isTaskTitleExpansion() && isTask(task))
+        || (isProjectTitleExpansion() && isProject(task))
+        ? task.text : "";
     };
 
     var task_sections = [
@@ -507,6 +546,23 @@
 
     $('#indent').on('click', function() { gantt.eachSelectedTask(indent); });
     $('#outdent').on('click', function() { gantt.eachSelectedTask(outdent); });
+
+    function isTaskTitleExpansion() {
+      return $('#task-title-expansion').is(':checked');
+    }
+
+    function isProjectTitleExpansion() {
+      return $('#project-title-expansion').is(':checked');
+    }
+
+    $('#task-title-expansion').on('click', updateSelectedTasks);
+    $('#project-title-expansion').on('click', updateSelectedTasks);
+
+    function isTodayMarker() {
+      return $('#today-marker').is(':checked');
+    }
+
+    $('#today-marker').on('click', function() { isTodayMarker() ? addTodayMarker() : removeTodayMarker() });
 
     gantt.attachEvent("onBeforeTaskDrag", function(id, mode, e) {
       return mode != gantt.config.drag_mode.resize || isTask(gantt.getTask(id));
