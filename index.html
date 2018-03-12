@@ -268,18 +268,23 @@
 
     var todayMarker;
     function addTodayMarker() {
-      var date_to_str = gantt.date.date_to_str(gantt.config.task_date);
-      var today = new Date();
-      todayMarker = gantt.addMarker({
-        start_date: today,
-        css: "today",
-        text: "Today",
-        title:"Today: " + date_to_str(today)
-      });
+      if (!todayMarker) {
+        var date_to_str = gantt.date.date_to_str(gantt.config.task_date);
+        var today = new Date();
+        todayMarker = gantt.addMarker({
+          start_date: today,
+          css: "today",
+          text: "Today",
+          title:"Today: " + date_to_str(today)
+        });
+      }
     }
 
     function removeTodayMarker() {
-      gantt.deleteMarker(todayMarker);
+      if (todayMarker) {
+        gantt.deleteMarker(todayMarker);
+      }
+      todayMarker = undefined;
     }
 
     function configSetup() {
