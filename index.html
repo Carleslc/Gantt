@@ -139,6 +139,10 @@
     link.style.display = 'inline';
   }, false);
 
+  $('#download_json').on('click', function() {
+    document.getElementById('download_json').style.display = 'none';
+  });
+
   // Load
   loadData = function(file) {
     var loaded_filename = file.name.split('.')[0] + '.json';
@@ -601,6 +605,24 @@
     });
     gantt.init("gantt_here");
   })();
+
+  // Exit/refresh warning
+  var allowPrompt = true;
+
+  function areYouSure() {
+    console.log('BYEEE');
+    if (allowPrompt) {
+      allowPrompt = false;
+      var confMessage = "ARE YOU SURE?\n\nLeaving this page will result in lossing the progress you have not saved using the Save/Download option.\n\nPress Cancel to continue editing your Gantt.";
+      if (window.event) {
+        window.event.returnValue = confMessage;
+      }
+      allowPrompt = true;
+      return confMessage;
+    }
+  }
+
+  window.onbeforeunload = areYouSure;
   </script>
 </body>
 
