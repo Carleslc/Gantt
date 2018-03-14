@@ -323,7 +323,7 @@
       gantt.eachSelectedTask(updateTask);
     }
 
-    $('#style-selector').on('click', function() { changeSkin($(this).val()); });
+    $('#style-selector').on('change', function() { changeSkin($(this).val()); });
 
     function changeSkin(name) {
       var link = document.createElement("link");
