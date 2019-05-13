@@ -23,39 +23,39 @@ Otra opción es usar una hoja de **Excel** o **Google Spreadsheets** usando una 
 
 Si no necesitamos trazabilidad de tareas y solo queremos hacer un diagrama sencillo podemos usar la página [https://carleslc.me/Gantt/](https://carleslc.me/Gantt/), con el que obtendremos un resultado como el que se muestra a continuación.
 
-![Haz click [aquí](/Users/carleslc/Git/GitHub/Gantt/images/resultado.png) para visualizarlo mejor](images/resultado.png)
+![Haz click [aquí](https://github.com/Carleslc/Gantt/blob/master/images/resultado.png?raw=true) para visualizarlo mejor](images/resultado.png)
 
 Cuando accedemos a la página nos encontramos con nuestro espacio de trabajo, con diferentes opciones para poder crear nuestro diagrama:
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/espacio_trabajo.png)
+![](images/espacio_trabajo.png)
 
 Para añadir una **tarea** pulsaremos en el "**+**" de la parte izquierda de la página, donde se mostrará el *árbol de tareas y proyectos* con sus fechas de inicio y duraciones.
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/plus.png)
+![](images/plus.png)
 
 Cuando pulsamos en el "+" nos aparece una ventana para rellenar la información de nuestra tarea.
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/task.png)
+![](images/task.png)
 
 Añadimos una pequeña descripción como **título** (Description) de la tarea y le damos a guardar (Save). Las **fechas** de inicio y final las podemos especificar ahora o más tarde, *estirando* la tarea arrastrando desde sus laterales.
 
 Aquí consideraremos un **proyecto** como un conjunto de tareas, y se muestra en el diagrama de color verde. Sirven para mejorar la visualización de etapas más generales. Las tareas se muestran en color azul. Podemos crear un proyecto añadiendo subtareas, como se muestra en el gráfico siguiente.
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/project.png)
+![](images/project.png)
 
 Puedes **editar** una tarea haciendo *doble click* sobre ella.
 
 Si quieres, puedes especificar **dependencias** usando flechas, mediante los círculos a los laterales de las tareas.
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/dependencias.png)
+![](images/dependencias.png)
 
 Puedes definir *milestones* a la hora de crear una tarea. Esto son **objetivos**, y se muestran en morado.
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/milestone.png)
+![](images/milestone.png)
 
 Puedes modificar el **zoom** del diagrama para verlo de forma más global. Hay tres niveles de zoom: semanal, mensual y anual. Así queda el diagrama en visualización anual:
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/zoom.png)
+![](images/zoom.png)
 
 La opción *"Show Today"* te permite señalar dónde nos encontramos actualmente.
 
@@ -65,16 +65,16 @@ Las opciones "Expand Task/Project Titles" sirven para añadir el título de la t
 
 En la siguiente imagen hemos marcado la opción "Expand Task Titles".
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/expand.png)
+![](images/expand.png)
 
 También puedes cambiar el **estilo** del diagrama.
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/style.png)
+![](images/style.png)
 
 Cuando hayas terminado, puedes **exportar** el diagrama en varios formatos (PNG, PDF, Excel o iCal). El formato **iCal** sirve para añadirlo a un calendario existente como el de Google Calendar.
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/export.png)
+![](images/export.png)
 
-Para poder **guardar** el diagrama y **editarlo más tarde** utiliza la opción "Save" arriba de la página y luego haz click en "Download". Esto descargará un documento en formato JSON que podrás cargar usando la opción "Load" cuando vuelvas más tarde a esta página.
+Para poder **guardar** el diagrama y **editarlo más tarde** utiliza la opción "**Save**" arriba de la página y luego haz click en "**Download**". Esto descargará un documento en formato JSON que podrás cargar usando la opción "Load" cuando vuelvas más tarde a esta página.
 
-![](/Users/carleslc/Git/GitHub/Gantt/images/save.png)
+![](images/save.png)
